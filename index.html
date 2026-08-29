@@ -52,6 +52,9 @@
         .page-pad { padding-left:12px; padding-right:12px; }
         .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
+    .label{display:block;font-size:.875rem;font-weight:600;color:#475569;margin-bottom:.375rem}
+    .field{width:100%;padding:.68rem .8rem;border:1px solid #e2e8f0;border-radius:.75rem;background:#fff}
+    .field:focus{border-color:#46bd94;box-shadow:0 0 0 3px rgba(70,189,148,.14)}
 </style>
 
 <script>
@@ -327,7 +330,7 @@ tailwind.config = {
                             </table>
                         </div>
                     </div>
-                    <div id="ordersMobile" class="space-y-3"></div>
+                    <div id="ordersMobile" class="space-y-3 md:hidden"></div>
                 </section>
 
                 <!-- CALENDAR -->
@@ -557,7 +560,7 @@ tailwind.config = {
 
 <script>
 /* =========================
-   FIREBASE
+   FIREBASE & CONFIG
 ========================= */
 const firebaseConfig = {
     apiKey: "AIzaSyBFmwAXG4tgiE7hDUsfelHubULgKmEy0S4",
@@ -571,9 +574,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Chỉ lưu hằng số tên Role hoặc tham chiếu, KHÔNG lưu mật khẩu
+// HẰNG SỐ ADMIN & ROLE
+const ADMIN_USERNAME = "admin";
 const ROLE_ADMIN = "admin";
-
 
 let currentUser = localStorage.getItem("currentUser") || null;
 let allOrders = [];
@@ -645,6 +648,7 @@ function normalizeOrder(owner, raw) {
     const debt = raw.debtRaw != null ? Number(raw.debtRaw) : Math.max(0,total-deposit);
     return {...raw, owner, priceRaw, total, deposit, debtRaw:debt};
 }
+function cleanUsername(v){ return String(v||"").trim().replace(/[.#$[\]/]/g,"_"); }
 
 /* =========================
    AUTH
@@ -655,13 +659,12 @@ function switchAuthTab(tab) {
     $("loginTab").className = tab === "login" ? "flex-1 pb-3 text-brand-700 font-bold border-b-2 border-brand-600" : "flex-1 pb-3 text-slate-400 font-semibold";
     $("registerTab").className = tab === "register" ? "flex-1 pb-3 text-brand-700 font-bold border-b-2 border-brand-600" : "flex-1 pb-3 text-slate-400 font-semibold";
 }
-function cleanUsername(v){ return String(v||"").trim().replace(/[.#$[\]/]/g,"_"); }
 
 function handleRegister(e) {
     e.preventDefault();
     const username = cleanUsername($("regUsername").value);
     const password = $("regPassword").value;
-    if (!username || username === ADMIN_USERNAME) return toast("Tên tài khoản không hợp lệ hoặc đã dành cho Admin.","error");
+    if (!username || username === ADMIN_USERNAME) return toast("Tên tài khoản không hợp lệ hoặc trùng Admin.","error");
     db.ref("users/"+username).once("value").then(snap=>{
         if (snap.exists()) return toast("Tài khoản đã tồn tại.","error");
         return db.ref("users/"+username).set({password, createdAt:Date.now()});
@@ -672,42 +675,31 @@ function handleRegister(e) {
         $("loginUsername").value = username;
     }).catch(err=>toast("Không thể tạo tài khoản: "+err.message,"error"));
 }
-async function handleLogin(username, password) {
-  const cleanUsername = username.trim();
-  const cleanPassword = password.trim();
 
-  try {
-    // Đọc dữ liệu từ node users/ [tên đăng nhập]
-    const userRef = firebase.database().ref('users/' + cleanUsername);
-    const snapshot = await userRef.once('value');
+async function handleLogin(e) {
+    e.preventDefault();
+    const userVal = cleanUsername($("loginUsername").value);
+    const passVal = $("loginPassword").value.trim();
 
-    if (!snapshot.exists()) {
-      alert("Tài khoản hoặc mật khẩu không chính xác!");
-      return;
+    try {
+        const snapshot = await db.ref('users/' + userVal).once('value');
+        if (!snapshot.exists()) {
+            return toast("Tài khoản hoặc mật khẩu không chính xác!", "error");
+        }
+        const userData = snapshot.val();
+        if (userData.password === passVal) {
+            currentUser = userVal;
+            localStorage.setItem("currentUser", currentUser);
+            enterApp();
+            toast("Đăng nhập thành công!");
+        } else {
+            toast("Tài khoản hoặc mật khẩu không chính xác!", "error");
+        }
+    } catch (error) {
+        toast("Lỗi kết nối: " + error.message, "error");
     }
-
-    const userData = snapshot.val();
-
-    // Đối soát mật khẩu
-    if (userData.password === cleanPassword) {
-      // Kiểm tra quyền Admin dựa trên trường role trong database
-      if (userData.role === "admin") {
-        sessionStorage.setItem("currentUser", cleanUsername);
-        sessionStorage.setItem("userRole", "admin");
-        window.location.href = "admin_dashboard.html"; // Trang dành cho Admin
-      } else {
-        sessionStorage.setItem("currentUser", cleanUsername);
-        sessionStorage.setItem("userRole", "user");
-        window.location.href = "user_dashboard.html";  // Trang dành cho User
-      }
-    } else {
-      alert("Tài khoản hoặc mật khẩu không chính xác!");
-    }
-  } catch (error) {
-    console.error("Lỗi đăng nhập:", error);
-    alert("Đã xảy ra lỗi kết nối!");
-  }
 }
+
 function handleLogout() {
     currentUser = null;
     localStorage.removeItem("currentUser");
@@ -716,6 +708,7 @@ function handleLogout() {
     $("authScreen").classList.remove("hidden");
     $("loginPassword").value = "";
 }
+
 function enterApp() {
     $("authScreen").classList.add("hidden");
     $("appScreen").classList.remove("hidden");
@@ -741,6 +734,7 @@ function stopListeners() {
     db.ref("users").off();
     listenersStarted = false;
 }
+
 function startListeners() {
     if (listenersStarted) return;
     listenersStarted = true;
@@ -767,6 +761,7 @@ function startListeners() {
         });
     }
 }
+
 function refreshUI() {
     renderDashboard();
     renderOrders();
@@ -791,6 +786,7 @@ const titles = {
     export:["Xuất dữ liệu","Sao lưu danh sách đơn hàng"],
     settings:["Cài đặt hệ thống","Thiết lập giao diện website"]
 };
+
 function showView(view) {
     if ((view === "users" || view === "settings") && currentUser !== ADMIN_USERNAME) return;
     currentView = view;
@@ -872,8 +868,9 @@ function renderOrders() {
     $("ordersTableBody").innerHTML = filtered.length ? filtered.map(o=>orderRow(o)).join("") : `<tr><td colspan="${colspan}" class="p-10 text-center text-slate-400">Không tìm thấy dữ liệu phù hợp.</td></tr>`;
     $("ordersMobile").innerHTML = filtered.length ? filtered.map(o=>orderCard(o)).join("") : `<div class="card p-8 text-center text-slate-400">Không có đơn phù hợp.</div>`;
 }
+
 function orderRow(o) {
-    const debt=orderDebt(o), deposit=orderDeposit(o), total=orderTotal(o);
+    const debt=orderDebt(o), deposit=orderDeposit(o);
     return `<tr class="hover:bg-slate-50">
         ${currentUser===ADMIN_USERNAME ? `<td class="px-4 py-3 font-bold text-brand-700">${esc(o.owner)}</td>` : ""}
         <td class="px-4 py-3"><div class="font-bold">${esc(o.name)}</div><div class="text-[11px] text-brand-600"><i class="fa-solid fa-phone mr-1"></i>${esc(o.phone)}</div></td>
@@ -891,6 +888,7 @@ function orderRow(o) {
         </div></td>
     </tr>`;
 }
+
 function orderCard(o) {
     const debt=orderDebt(o), deposit=orderDeposit(o);
     return `<div class="card p-4">
@@ -915,6 +913,7 @@ function orderCard(o) {
         </div>
     </div>`;
 }
+
 function openOrderModal(order=null) {
     if (!currentUser || currentUser===ADMIN_USERNAME) {
         if (currentUser===ADMIN_USERNAME) return toast("Admin đang ở chế độ quản lý tổng thể. Hãy chọn tài khoản và tạo đơn từ tài khoản đó.","warning");
@@ -932,13 +931,16 @@ function openOrderModal(order=null) {
     updatePriceAndHatch(order);
     openModal("orderModal");
 }
+
 function breedCode(text) {
     const t=String(text||"").toLowerCase();
     return t.includes("vịt")?"vit":t.includes("ngan")?"ngan":"ga";
 }
+
 function toISODate(dmy) {
     const d=parseDMY(dmy); return d ? d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") : isoToday();
 }
+
 function updatePriceAndHatch(order) {
     const sel=$("breedType"), opt=sel.options[sel.selectedIndex];
     if (!order && (!$("breedPrice").value || $("breedPrice").dataset.auto==="1")) $("breedPrice").value=opt.dataset.price;
@@ -949,6 +951,7 @@ function updatePriceAndHatch(order) {
     $("previewHatch").textContent=fmtDate(hatch);
     previewOrderMoney();
 }
+
 function previewOrderMoney() {
     const total=(Number($("quantity").value)||0)*(Number($("breedPrice").value)||0);
     const dep=Number($("deposit").value)||0;
@@ -956,6 +959,7 @@ function previewOrderMoney() {
     $("previewDeposit").textContent=money(dep);
     $("previewDebt").textContent=money(Math.max(0,total-dep));
 }
+
 function saveOrder(e) {
     e.preventDefault();
     if (!currentUser || currentUser===ADMIN_USERNAME) return;
@@ -975,14 +979,17 @@ function saveOrder(e) {
         updatePriceAndHatch();
     }).catch(err=>toast("Không thể lưu đơn: "+err.message,"error"));
 }
+
 function editOrder(id) {
     const o=allOrders.find(x=>x.owner===currentUser && x.id===id);
     if(o) openOrderModal(o);
 }
+
 function deleteOrder(id) {
     if(!confirm("Xóa đơn hàng này? Dữ liệu sẽ bị xóa khỏi Firebase.")) return;
     db.ref("orders/"+currentUser+"/"+id).remove().then(()=>toast("Đã xóa đơn."));
 }
+
 function adminDeleteOrder(owner,id) {
     if(currentUser!==ADMIN_USERNAME) return;
     if(!confirm(`Xóa đơn của tài khoản "${owner}"?`)) return;
@@ -1040,11 +1047,13 @@ function renderCalendar() {
         </div>`;
     }).join("") : `<div class="p-10 text-center text-slate-400">Không có đơn nào nở trong 14 ngày tới.</div>`;
 }
+
 function openReferenceModal() {
     $("refDate").value=isoToday();
     $("refResult").classList.add("hidden");
     showView("calendar");
 }
+
 function calculateReference() {
     const days=Number($("refBreed").value), val=$("refDate").value;
     if(!val) return toast("Vui lòng chọn ngày nở.","warning");
@@ -1099,6 +1108,7 @@ function renderAdminUsers() {
         </tr>`;
     }).join("") : `<tr><td colspan="5" class="p-8 text-center text-slate-400">Chưa có tài khoản người dùng.</td></tr>`;
 }
+
 function renderAdminCustomers() {
     if(currentUser!==ADMIN_USERNAME) return;
     const sel=$("adminOwnerFilter");
@@ -1130,11 +1140,13 @@ function renderAdminCustomers() {
             </div>
         </div>`).join("") : `<div class="p-10 text-center text-slate-400">Chưa có khách hàng.</div>`;
 }
+
 function filterAdminOwner(username) {
     $("adminOwnerFilter").value=username;
     renderAdminCustomers();
     $("view-users").scrollIntoView({behavior:"smooth"});
 }
+
 function showCustomerOrders(owner,name,phone) {
     const os=allOrders.filter(o=>o.owner===owner && o.name===name && o.phone===phone);
     $("detailTitle").textContent=name;
@@ -1147,6 +1159,7 @@ function showCustomerOrders(owner,name,phone) {
         </div>`).join("")}</div>`;
     openModal("detailModal");
 }
+
 function openUserModal(username="") {
     if(currentUser!==ADMIN_USERNAME) return;
     $("userModalTitle").textContent=username?"Sửa tài khoản":"Tạo tài khoản";
@@ -1158,6 +1171,7 @@ function openUserModal(username="") {
     $("userPassword").required=true;
     openModal("userModal");
 }
+
 function saveUser(e) {
     e.preventDefault();
     if(currentUser!==ADMIN_USERNAME) return;
@@ -1175,6 +1189,7 @@ function saveUser(e) {
         }).then(()=>{toast("Đã tạo tài khoản.");closeModal("userModal");}).catch(e=>toast(e.message,"error"));
     }
 }
+
 function deleteUser(username) {
     if(currentUser!==ADMIN_USERNAME) return;
     const hasOrders=allOrders.some(o=>o.owner===username);
@@ -1199,6 +1214,7 @@ function exportCSV() {
     });
     downloadBlob(csv,`Danh_Sach_Ap_Trung_${isoToday()}.csv`,"text/csv;charset=utf-8;");
 }
+
 function exportTXT() {
     const orders=getCurrentOrders();
     if(!orders.length) return toast("Không có dữ liệu để xuất.","warning");
@@ -1209,6 +1225,7 @@ function exportTXT() {
     });
     downloadBlob(text,`Bao_Cao_Ap_Trung_${isoToday()}.txt`,"text/plain;charset=utf-8;");
 }
+
 function downloadBlob(content,name,type) {
     const blob=new Blob([content],{type}), url=URL.createObjectURL(blob), a=document.createElement("a");
     a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
@@ -1223,6 +1240,7 @@ function updateNotifications() {
     const b=$("headerNotifBadge");
     b.textContent=due.length;b.classList.toggle("hidden",due.length===0);
 }
+
 function fetchWeather() {
     if(!navigator.geolocation) { $("weatherText").textContent="Thời tiết"; return; }
     navigator.geolocation.getCurrentPosition(async pos=>{
@@ -1243,6 +1261,7 @@ function fetchWeather() {
         } catch { $("weatherText").textContent="Không tải được thời tiết"; }
     },()=>{ $("weatherText").textContent="Chưa cấp quyền vị trí"; });
 }
+
 function openWeatherModal(){openModal("weatherModal");}
 
 /* =========================
@@ -1264,6 +1283,7 @@ function loadSettings() {
         if($("settingTitle")){$("settingTitle").value=c.siteTitle||"";$("settingLogo").value=c.logoUrl||"";$("settingBg").value=c.bgUrl||"";$("settingColor").value=c.primaryColor||"#087f5b";$("settingColorText").value=c.primaryColor||"#087F5B";}
     });
 }
+
 function saveSettings(e) {
     e.preventDefault();
     if(currentUser!==ADMIN_USERNAME) return;
@@ -1285,11 +1305,5 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(currentUser) enterApp();
 });
 </script>
-
-<style>
-.label{display:block;font-size:.875rem;font-weight:600;color:#475569;margin-bottom:.375rem}
-.field{width:100%;padding:.68rem .8rem;border:1px solid #e2e8f0;border-radius:.75rem;background:#fff}
-.field:focus{border-color:#46bd94;box-shadow:0 0 0 3px rgba(70,189,148,.14)}
-</style>
 </body>
 </html>
