@@ -4,10 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý Lò Ấp Trứng - Đám Mây Online</title>
+    
+    <!-- CẤU HÌNH PWA ĐỂ CÀI THÀNH APP DI ĐỘNG -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Quản Lý Lò Ấp">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3076/3076753.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3076/3076753.png">
+    <meta name="theme-color" content="#2e7d32">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Nhúng thư viện Firebase SDK bản tương thích -->
+    <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -27,7 +36,7 @@
 </head>
 <body class="bg-primary min-h-screen text-gray-800 flex flex-col relative">
 
-    <!-- CẤU HÌNH FIREBASE -->
+    <!-- KHỞI TẠO FIREBASE -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBFmwAXG4tgiE7hDUsfelHubULgKmEy0S4",
@@ -43,7 +52,7 @@
         const db = firebase.database();
     </script>
 
-    <!-- KHU VỰC XÁC THỰC -->
+    <!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="authContainer" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full max-w-md border border-emerald-100">
             <div class="text-center mb-6">
@@ -83,7 +92,7 @@
         </div>
     </div>
 
-    <!-- KHU VỰC ỨNG DỤNG CHÍNH -->
+    <!-- GIAO DIỆN ỨNG DỤNG CHÍNH -->
     <div id="appContainer" class="hidden min-h-screen flex flex-col">
         <header class="bg-emerald-700 text-white shadow-md py-3 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 relative">
             <div class="flex items-center space-x-3">
@@ -144,20 +153,28 @@
                 </form>
             </section>
 
-            <!-- CỘT DANH SÁCH -->
+            <!-- CỘT DANH SÁCH & TÌM KIẾM -->
             <section id="tableSection" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-2 border border-emerald-100 flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                     <h2 id="tableTitle" class="text-base sm:text-lg font-bold text-emerald-800 flex items-center">
                         <i class="fa-solid fa-list-check mr-2"></i> Danh Sách Đơn Hàng & Lịch Trình Ấp
                     </h2>
                     
-                    <!-- NÚT TẢI SAO LƯU (EXCEL & VĂN BẢN) -->
+                    <!-- Ô TÌM KIẾM NHANH -->
+                    <div class="relative w-full sm:w-64">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="searchKeyword" oninput="filterOrdersTable()" placeholder="Tìm tên hoặc SĐT..." class="w-full pl-9 pr-3 py-1.5 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm bg-white">
+                    </div>
+
+                    <!-- NÚT SAO LƯU -->
                     <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
                         <button onclick="exportToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg transition flex items-center shadow">
-                            <i class="fa-solid fa-file-excel mr-1.5"></i> Tải Excel (CSV)
+                            <i class="fa-solid fa-file-excel mr-1.5"></i> Tải Excel
                         </button>
                         <button onclick="exportToText()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg transition flex items-center shadow">
-                            <i class="fa-solid fa-file-lines mr-1.5"></i> Tải File Văn Bản (.txt)
+                            <i class="fa-solid fa-file-lines mr-1.5"></i> Tải .txt
                         </button>
                     </div>
                 </div>
@@ -172,7 +189,7 @@
                                 <th class="p-3">Đơn Giá</th>
                                 <th class="p-3">Cho Vào Máy</th>
                                 <th class="p-3">Ngày Nở Dự Kiến</th>
-                                <th class="p-3">Công Nợ (Còn Thiếu)</th>
+                                <th class="p-3">Công Nợ</th>
                                 <th class="p-3 text-center">Thao tác</th>
                             </tr>
                         </thead>
@@ -184,7 +201,7 @@
         </main>
     </div>
 
-    <!-- BONG BÓNG CHAT THÔNG BÁO NỔI -->
+    <!-- BONG BÓNG THÔNG BÁO LỊCH NỞ -->
     <div id="floatingNotification" class="fixed bottom-6 right-6 z-[99999] cursor-pointer hidden select-none touch-none">
         <div id="floatingBtn" class="relative bg-emerald-600 hover:bg-emerald-700 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center border-2 border-white transition-transform active:scale-95">
             <i class="fa-solid fa-message text-2xl"></i>
@@ -206,7 +223,7 @@
         const ADMIN_PASSWORD = "12345678t";
 
         let currentUser = localStorage.getItem('currentUser') || null;
-        let cachedOrdersForExport = []; // Lưu trữ dữ liệu để phục vụ xuất file
+        let cachedOrdersForExport = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('orderDate').valueAsDate = new Date();
@@ -236,7 +253,6 @@
                 isDragging = false;
                 startX = e.clientX;
                 startY = e.clientY;
-                
                 const rect = el.getBoundingClientRect();
                 initialX = rect.left;
                 initialY = rect.top;
@@ -247,7 +263,6 @@
                 if (!startX || !startY) return;
                 const dx = e.clientX - startX;
                 const dy = e.clientY - startY;
-
                 if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                     isDragging = true;
                     el.style.left = (initialX + dx) + 'px';
@@ -259,8 +274,7 @@
 
             function dragEnd(e) {
                 if (!isDragging) {
-                    const dropdown = document.getElementById('notifDropdown');
-                    dropdown.classList.toggle('hidden');
+                    document.getElementById('notifDropdown').classList.toggle('hidden');
                 }
                 startX = null;
                 startY = null;
@@ -309,12 +323,10 @@
 
             db.ref('users/' + username).once('value', (snapshot) => {
                 if (snapshot.exists()) {
-                    alert('Tên tài khoản này đã tồn tại trên hệ thống!');
+                    alert('Tên tài khoản này đã tồn tại!');
                 } else {
                     db.ref('users/' + username).set({ password: password }, (error) => {
-                        if (error) {
-                            alert('Đăng ký thất bại!');
-                        } else {
+                        if (!error) {
                             alert('Đăng ký thành công! Hãy đăng nhập.');
                             switchTab('login');
                         }
@@ -394,22 +406,16 @@
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(880, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
-
                 gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-
                 osc.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.5);
-            } catch (e) {
-                console.log("Audio locked");
-            }
+            } catch (e) {}
         }
 
         function checkNotifications(orders) {
@@ -431,7 +437,7 @@
                     item.className = "p-3 hover:bg-emerald-50 transition cursor-pointer";
                     item.innerHTML = `
                         <div class="font-semibold text-emerald-800"><i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> ${order.name} (${order.phone})</div>
-                        <div class="text-xs text-gray-600 mt-1">Đến hẹn lấy: <span class="font-bold text-red-600">${order.breedText} - ${order.quantity} con</span></div>
+                        <div class="text-xs text-gray-600 mt-1">Đến hẹn: <span class="font-bold text-red-600">${order.breedText} - ${order.quantity} con</span></div>
                     `;
                     notifList.appendChild(item);
                 });
@@ -484,9 +490,7 @@
             };
 
             db.ref('orders/' + currentUser + '/' + orderId).set(newOrder, (error) => {
-                if (error) {
-                    alert('Lưu đơn thất bại!');
-                } else {
+                if (!error) {
                     document.getElementById('orderForm').reset();
                     document.getElementById('orderDate').valueAsDate = new Date();
                     updateDefaultPrice();
@@ -496,24 +500,78 @@
 
         function loadOrdersRealtime() {
             if (!currentUser) return;
-            const tableBody = document.getElementById('orderTableBody');
-
             db.ref('orders/' + currentUser).on('value', (snapshot) => {
-                tableBody.innerHTML = '';
                 const data = snapshot.val();
                 let allOrders = [];
-
-                if (data) {
-                    allOrders = Object.values(data);
-                }
-
+                if (data) allOrders = Object.values(data);
                 cachedOrdersForExport = allOrders.map(o => ({ owner: currentUser, ...o }));
                 checkNotifications(allOrders);
+                filterOrdersTable();
+            });
+        }
 
-                allOrders.forEach((order) => {
-                    const displayPrice = order.price ? order.price : '0 đ';
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-gray-50";
+        function loadAllOrdersForAdmin() {
+            if (currentUser !== ADMIN_USERNAME) return;
+            db.ref('orders').on('value', (snapshot) => {
+                const allUsersData = snapshot.val();
+                cachedOrdersForExport = [];
+                if (allUsersData) {
+                    Object.keys(allUsersData).forEach(username => {
+                        const userOrders = allUsersData[username];
+                        if (userOrders) {
+                            Object.values(userOrders).forEach(order => {
+                                cachedOrdersForExport.push({ owner: username, ...order });
+                            });
+                        }
+                    });
+                }
+                filterOrdersTable();
+            });
+        }
+
+        function filterOrdersTable() {
+            const keyword = document.getElementById('searchKeyword').value.toLowerCase().trim();
+            const tableBody = document.getElementById('orderTableBody');
+            tableBody.innerHTML = '';
+
+            const filteredOrders = cachedOrdersForExport.filter(order => {
+                const nameMatch = order.name.toLowerCase().includes(keyword);
+                const phoneMatch = order.phone.toLowerCase().includes(keyword);
+                const ownerMatch = order.owner ? order.owner.toLowerCase().includes(keyword) : false;
+                return nameMatch || phoneMatch || ownerMatch;
+            });
+
+            if (filteredOrders.length === 0) {
+                const colSpan = (currentUser === ADMIN_USERNAME) ? 8 : 7;
+                tableBody.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-gray-400">Không tìm thấy dữ liệu phù hợp.</td></tr>`;
+                return;
+            }
+
+            filteredOrders.forEach((order) => {
+                const displayPrice = order.price ? order.price : '0 đ';
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-50";
+
+                if (currentUser === ADMIN_USERNAME) {
+                    row.innerHTML = `
+                        <td class="p-3 font-bold text-emerald-700">${order.owner}</td>
+                        <td class="p-3">
+                            <div class="font-semibold">${order.name}</div>
+                            <div class="text-xs text-gray-500">${order.phone}</div>
+                        </td>
+                        <td class="p-3">
+                            <div>${order.breedText}</div>
+                            <span class="text-xs text-emerald-600 font-semibold">${order.quantity} con</span>
+                        </td>
+                        <td class="p-3 text-gray-700">${displayPrice}</td>
+                        <td class="p-3 text-emerald-700 font-medium">${order.enterDate}</td>
+                        <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
+                        <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="deleteOrder('${order.id}', '${order.owner}')" class="text-red-400 hover:text-red-600 p-1" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    `;
+                } else {
                     row.innerHTML = `
                         <td class="p-3">
                             <div class="font-semibold">${order.name}</div>
@@ -531,130 +589,41 @@
                             <button onclick="deleteOrder('${order.id}', '${currentUser}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     `;
-                    tableBody.appendChild(row);
-                });
+                }
+                tableBody.appendChild(row);
             });
         }
 
-        function loadAllOrdersForAdmin() {
-            if (currentUser !== ADMIN_USERNAME) return;
-            const tableBody = document.getElementById('orderTableBody');
-
-            db.ref('orders').on('value', (snapshot) => {
-                tableBody.innerHTML = '';
-                const allUsersData = snapshot.val();
-                let totalOrdersCount = 0;
-                cachedOrdersForExport = [];
-
-                if (allUsersData) {
-                    Object.keys(allUsersData).forEach(username => {
-                        const userOrders = allUsersData[username];
-                        if (userOrders) {
-                            Object.values(userOrders).forEach(order => {
-                                totalOrdersCount++;
-                                cachedOrdersForExport.push({ owner: username, ...order });
-
-                                const displayPrice = order.price ? order.price : '0 đ';
-                                const row = document.createElement('tr');
-                                row.className = "hover:bg-gray-50";
-                                row.innerHTML = `
-                                    <td class="p-3 font-bold text-emerald-700">${username}</td>
-                                    <td class="p-3">
-                                        <div class="font-semibold">${order.name}</div>
-                                        <div class="text-xs text-gray-500">${order.phone}</div>
-                                    </td>
-                                    <td class="p-3">
-                                        <div>${order.breedText}</div>
-                                        <span class="text-xs text-emerald-600 font-semibold">${order.quantity} con</span>
-                                    </td>
-                                    <td class="p-3 text-gray-700">${displayPrice}</td>
-                                    <td class="p-3 text-emerald-700 font-medium">${order.enterDate}</td>
-                                    <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
-                                    <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
-                                    <td class="p-3 text-center">
-                                        <button onclick="deleteOrder('${order.id}', '${username}')" class="text-red-400 hover:text-red-600 p-1" title="Xóa đơn này của khách"><i class="fa-solid fa-trash"></i></button>
-                                    </td>
-                                `;
-                                tableBody.appendChild(row);
-                            });
-                        }
-                    });
-                }
-
-                if (totalOrdersCount === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-400">Chưa có đơn hàng nào trên hệ thống.</td></tr>`;
-                }
-            });
-        }
-
-        // TÍNH NĂNG XUẤT FILE EXCEL (.CSV)
         function exportToExcel() {
             if (cachedOrdersForExport.length === 0) {
-                alert('Không có dữ liệu để xuất file!');
+                alert('Không có dữ liệu!');
                 return;
             }
-
-            let csvContent = "\uFEFF"; // Hỗ trợ hiển thị tiếng Việt UTF-8 chuẩn trên Excel
-            csvContent += "Chủ Lò,Khách Hàng,Số Điện Thoại,Loại Giống,Số Lượng,Đơn Giá,Ngày Vào Máy,Ngày Nở Dự Kiến,Công Nợ Còn Thiếu\n";
-
+            let csvContent = "\uFEFFChủ Lò,Khách Hàng,Số Điện Thoại,Loại Giống,Số Lượng,Đơn Giá,Ngày Vào Máy,Ngày Nở,Công Nợ\n";
             cachedOrdersForExport.forEach(o => {
-                const row = [
-                    `"${o.owner || currentUser}"`,
-                    `"${o.name}"`,
-                    `"${o.phone}"`,
-                    `"${o.breedText}"`,
-                    o.quantity,
-                    `"${o.price}"`,
-                    `"${o.enterDate}"`,
-                    `"${o.hatchDate}"`,
-                    `"${o.debt}"`
-                ];
-                csvContent += row.join(",") + "\n";
+                csvContent += `"${o.owner || currentUser}","${o.name}","${o.phone}","${o.breedText}",${o.quantity},"${o.price}","${o.enterDate}","${o.hatchDate}","${o.debt}"\n`;
             });
-
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `sao-luu-don-hang-${currentUser}-${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`;
-            document.body.appendChild(a);
+            a.href = URL.createObjectURL(blob);
+            a.download = `sao-luu-${currentUser}.csv`;
             a.click();
-            document.body.removeChild(a);
         }
 
-        // TÍNH NĂNG XUẤT FILE VĂN BẢN DỄ ĐỌC (.TXT) CHO KHÁCH HÀNG
         function exportToText() {
             if (cachedOrdersForExport.length === 0) {
-                alert('Không có dữ liệu để xuất file!');
+                alert('Không có dữ liệu!');
                 return;
             }
-
-            let textContent = "========================================\n";
-            textContent += `     DANH SÁCH ĐƠN HÀNG - TÀI KHOẢN: ${currentUser.toUpperCase()}\n`;
-            textContent += `     Ngày xuất file: ${new Date().toLocaleString('vi-VN')}\n`;
-            textContent += "========================================\n\n";
-
-            cachedOrdersForExport.forEach((o, index) => {
-                textContent += `Đơn số [${index + 1}]\n`;
-                if (currentUser === ADMIN_USERNAME) textContent += `- Chủ lò: ${o.owner}\n`;
-                textContent += `- Khách hàng: ${o.name}\n`;
-                textContent += `- Số điện thoại: ${o.phone}\n`;
-                textContent += `- Giống và số lượng: ${o.breedText} - ${o.quantity} con\n`;
-                textContent += `- Đơn giá: ${o.price}\n`;
-                textContent += `- Ngày vào máy: ${o.enterDate}\n`;
-                textContent += `- Ngày nở dự kiến: ${o.hatchDate}\n`;
-                textContent += `- Công nợ còn thiếu: ${o.debt}\n`;
-                textContent += "----------------------------------------\n";
+            let textContent = `DANH SÁCH ĐƠN HÀNG - ${currentUser.toUpperCase()}\n\n`;
+            cachedOrdersForExport.forEach((o, i) => {
+                textContent += `[${i+1}] Khách: ${o.name} - SĐT: ${o.phone} - ${o.breedText}: ${o.quantity} con - Nợ: ${o.debt}\n`;
             });
-
             const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `danh-sach-don-hang-${currentUser}.txt`;
-            document.body.appendChild(a);
+            a.href = URL.createObjectURL(blob);
+            a.download = `danh-sach-${currentUser}.txt`;
             a.click();
-            document.body.removeChild(a);
         }
 
         function deleteOrder(id, ownerUser) {
