@@ -25,9 +25,9 @@
         }
     </script>
 </head>
-<body class="bg-primary min-h-screen text-gray-800 flex flex-col">
+<body class="bg-primary min-h-screen text-gray-800 flex flex-col relative">
 
-    <!-- CẤU HÌNH FIREBASE CHÍNH XÁC CỦA BẠN -->
+    <!-- CẤU HÌNH FIREBASE -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBFmwAXG4tgiE7hDUsfelHubULgKmEy0S4",
@@ -92,23 +92,6 @@
             </div>
             
             <div class="flex items-center space-x-4 text-sm">
-                <!-- KHUNG CHUÔNG THÔNG BÁO -->
-                <div class="relative" id="notificationArea">
-                    <button onclick="toggleNotificationDropdown()" class="relative bg-emerald-800 hover:bg-emerald-900 p-2.5 rounded-full transition flex items-center justify-center focus:outline-none" title="Thông báo đến hạn nở">
-                        <i class="fa-solid fa-bell text-lg"></i>
-                        <span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
-                    </button>
-
-                    <div id="notifDropdown" class="hidden absolute right-0 sm:right-0 mt-2 w-72 sm:w-80 bg-white text-gray-800 rounded-xl shadow-2xl border border-gray-200 z-[999] overflow-hidden">
-                        <div class="bg-emerald-800 text-white px-4 py-3 font-semibold flex justify-between items-center">
-                            <span><i class="fa-solid fa-bell mr-1"></i> Lịch Nở Hôm Nay</span>
-                            <span id="notifCountText" class="text-xs bg-emerald-600 px-2 py-0.5 rounded-full">0 đơn</span>
-                        </div>
-                        <div id="notifList" class="max-h-72 overflow-y-auto divide-y divide-gray-100 text-sm">
-                        </div>
-                    </div>
-                </div>
-
                 <span id="userWelcome" class="text-emerald-200 font-medium"></span>
                 <button onclick="handleLogout()" class="bg-emerald-800 hover:bg-emerald-900 px-3 py-1.5 rounded-lg transition">
                     <i class="fa-solid fa-right-from-bracket mr-1"></i> Đăng xuất
@@ -117,7 +100,7 @@
         </header>
 
         <main class="container mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
-            <!-- CỘT THÊM ĐƠN (ẨN ĐI NẾU LÀ ADMIN) -->
+            <!-- CỘT THÊM ĐƠN -->
             <section id="addOrderSection" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-1 border border-emerald-100 h-fit">
                 <h2 class="text-base sm:text-lg font-bold text-emerald-800 mb-4 flex items-center">
                     <i class="fa-solid fa-plus-circle mr-2"></i> Thêm Đơn Đặt Giống Mới
@@ -161,7 +144,7 @@
                 </form>
             </section>
 
-            <!-- CỘT DANH SÁCH (SẼ MỞ RỘNG TOÀN MÀN HÌNH NẾU LÀ ADMIN) -->
+            <!-- CỘT DANH SÁCH -->
             <section id="tableSection" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-2 border border-emerald-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 id="tableTitle" class="text-base sm:text-lg font-bold text-emerald-800 flex items-center">
@@ -191,8 +174,25 @@
         </main>
     </div>
 
+    <!-- BONG BÓNG CHAT / ICON THÔNG BÁO NỔI (KÉO DI CHUYỂN KHẮP MÀN HÌNH) -->
+    <div id="floatingNotification" class="fixed bottom-6 right-6 z-[99999] cursor-pointer hidden select-none touch-none">
+        <div id="floatingBtn" class="relative bg-emerald-600 hover:bg-emerald-700 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center border-2 border-white transition-transform active:scale-95">
+            <i class="fa-solid fa-message text-2xl"></i>
+            <span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow hidden">0</span>
+        </div>
+
+        <!-- HỘP NỘI DUNG THÔNG BÁO -->
+        <div id="notifDropdown" class="hidden absolute bottom-16 right-0 w-72 sm:w-80 bg-white text-gray-800 rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div class="bg-emerald-800 text-white px-4 py-3 font-semibold flex justify-between items-center cursor-default">
+                <span><i class="fa-solid fa-bell mr-1"></i> Lịch Nở Hôm Nay</span>
+                <span id="notifCountText" class="text-xs bg-emerald-600 px-2 py-0.5 rounded-full">0 đơn</span>
+            </div>
+            <div id="notifList" class="max-h-72 overflow-y-auto divide-y divide-gray-100 text-sm">
+            </div>
+        </div>
+    </div>
+
     <script>
-        // CẤU HÌNH TÀI KHOẢN QUẢN TRỊ VIÊN
         const ADMIN_USERNAME = "admin";
         const ADMIN_PASSWORD = "12345678t";
 
@@ -202,15 +202,63 @@
             document.getElementById('orderDate').valueAsDate = new Date();
             updateDefaultPrice();
             checkAuthState();
-            
+            initDraggableFloatingButton();
+
             window.addEventListener('click', function(e) {
                 const dropdown = document.getElementById('notifDropdown');
-                const bellBtn = e.target.closest('button[onclick="toggleNotificationDropdown()"]');
-                if (!dropdown.contains(e.target) && !bellBtn && !dropdown.classList.contains('hidden')) {
+                const bubble = document.getElementById('floatingNotification');
+                if (!bubble.contains(e.target) && !dropdown.classList.contains('hidden')) {
                     dropdown.classList.add('hidden');
                 }
             });
         });
+
+        // TÍNH NĂNG KÉO THẢ BONG BÓNG TRÊN MÀN HÌNH (MOBILE & PC)
+        function initDraggableFloatingButton() {
+            const el = document.getElementById('floatingNotification');
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            el.addEventListener('pointerdown', dragStart);
+            document.addEventListener('pointermove', drag);
+            document.addEventListener('pointerup', dragEnd);
+
+            function dragStart(e) {
+                isDragging = false;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = el.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+                el.setPointerCapture(e.pointerId);
+            }
+
+            function drag(e) {
+                if (!startX || !startY) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                    isDragging = true;
+                    el.style.left = (initialX + dx) + 'px';
+                    el.style.top = (initialY + dy) + 'px';
+                    el.style.bottom = 'auto';
+                    el.style.right = 'auto';
+                }
+            }
+
+            function dragEnd(e) {
+                if (!isDragging) {
+                    // Nếu không kéo mà chỉ bấm click -> bật/tắt bảng thông báo
+                    const dropdown = document.getElementById('notifDropdown');
+                    dropdown.classList.toggle('hidden');
+                }
+                startX = null;
+                startY = null;
+                isDragging = false;
+            }
+        }
 
         function formatMoney(amount) {
             return Number(amount).toLocaleString('en-US') + ' đ';
@@ -272,7 +320,6 @@
             const username = document.getElementById('loginUsername').value.trim().replace(/[.#$\[\]]/g, "_");
             const password = document.getElementById('loginPassword').value;
 
-            // Kiểm tra nếu là tài khoản admin cố định
             if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
                 currentUser = username;
                 localStorage.setItem('currentUser', currentUser);
@@ -280,7 +327,6 @@
                 return;
             }
 
-            // Kiểm tra các tài khoản khách hàng khác trên Firebase
             db.ref('users/' + username).once('value', (snapshot) => {
                 const userData = snapshot.val();
                 if (userData && userData.password === password) {
@@ -310,25 +356,23 @@
                 const addSection = document.getElementById('addOrderSection');
                 const tableSection = document.getElementById('tableSection');
                 const thOwner = document.getElementById('thOwner');
-                const notificationArea = document.getElementById('notificationArea');
+                const floatingNotification = document.getElementById('floatingNotification');
 
                 if (currentUser === ADMIN_USERNAME) {
-                    // GIAO DIỆN DÀNH CHO ADMIN
                     document.getElementById('userWelcome').innerText = `Quản Trị Viên: ${currentUser}`;
                     addSection.classList.add('hidden');
                     tableSection.classList.remove('lg:col-span-2');
                     tableSection.classList.add('lg:col-span-3');
                     thOwner.classList.remove('hidden');
-                    notificationArea.classList.add('hidden');
+                    floatingNotification.classList.add('hidden'); // Admin ẩn bong bóng thông báo
                     loadAllOrdersForAdmin();
                 } else {
-                    // GIAO DIỆN DÀNH CHO KHÁCH HÀNG
                     document.getElementById('userWelcome').innerText = `Xin chào: ${currentUser}`;
                     addSection.classList.remove('hidden');
                     tableSection.classList.remove('lg:col-span-3');
                     tableSection.classList.add('lg:col-span-2');
                     thOwner.classList.add('hidden');
-                    notificationArea.classList.remove('hidden');
+                    floatingNotification.classList.remove('hidden'); // Hiện bong bóng thông báo cho khách
                     loadOrdersRealtime();
                 }
             } else {
@@ -358,10 +402,6 @@
             } catch (e) {
                 console.log("Audio locked");
             }
-        }
-
-        function toggleNotificationDropdown() {
-            document.getElementById('notifDropdown').classList.toggle('hidden');
         }
 
         function checkNotifications(orders) {
@@ -395,7 +435,6 @@
             }
         }
 
-        // Khách hàng thêm đơn
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             if (!currentUser || currentUser === ADMIN_USERNAME) return;
@@ -447,7 +486,6 @@
             });
         });
 
-        // Tải đơn hàng của riêng khách
         function loadOrdersRealtime() {
             if (!currentUser) return;
             const tableBody = document.getElementById('orderTableBody');
@@ -489,7 +527,6 @@
             });
         }
 
-        // Tải toàn bộ đơn của tất cả khách cho Admin
         function loadAllOrdersForAdmin() {
             if (currentUser !== ADMIN_USERNAME) return;
             const tableBody = document.getElementById('orderTableBody');
