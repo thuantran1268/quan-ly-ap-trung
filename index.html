@@ -571,8 +571,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "12345678t";
+// Chỉ lưu hằng số tên Role hoặc tham chiếu, KHÔNG lưu mật khẩu
+const ROLE_ADMIN = "admin";
+
 
 let currentUser = localStorage.getItem("currentUser") || null;
 let allOrders = [];
@@ -671,23 +672,41 @@ function handleRegister(e) {
         $("loginUsername").value = username;
     }).catch(err=>toast("Không thể tạo tài khoản: "+err.message,"error"));
 }
-function handleLogin(e) {
-    e.preventDefault();
-    const username = cleanUsername($("loginUsername").value);
-    const password = $("loginPassword").value;
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        currentUser = ADMIN_USERNAME;
-        localStorage.setItem("currentUser", currentUser);
-        enterApp();
-        return;
+async function handleLogin(username, password) {
+  const cleanUsername = username.trim();
+  const cleanPassword = password.trim();
+
+  try {
+    // Đọc dữ liệu từ node users/ [tên đăng nhập]
+    const userRef = firebase.database().ref('users/' + cleanUsername);
+    const snapshot = await userRef.once('value');
+
+    if (!snapshot.exists()) {
+      alert("Tài khoản hoặc mật khẩu không chính xác!");
+      return;
     }
-    db.ref("users/"+username).once("value").then(snap=>{
-        const data = snap.val();
-        if (!data || data.password !== password) throw new Error("Sai tên tài khoản hoặc mật khẩu.");
-        currentUser = username;
-        localStorage.setItem("currentUser", currentUser);
-        enterApp();
-    }).catch(err=>toast(err.message,"error"));
+
+    const userData = snapshot.val();
+
+    // Đối soát mật khẩu
+    if (userData.password === cleanPassword) {
+      // Kiểm tra quyền Admin dựa trên trường role trong database
+      if (userData.role === "admin") {
+        sessionStorage.setItem("currentUser", cleanUsername);
+        sessionStorage.setItem("userRole", "admin");
+        window.location.href = "admin_dashboard.html"; // Trang dành cho Admin
+      } else {
+        sessionStorage.setItem("currentUser", cleanUsername);
+        sessionStorage.setItem("userRole", "user");
+        window.location.href = "user_dashboard.html";  // Trang dành cho User
+      }
+    } else {
+      alert("Tài khoản hoặc mật khẩu không chính xác!");
+    }
+  } catch (error) {
+    console.error("Lỗi đăng nhập:", error);
+    alert("Đã xảy ra lỗi kết nối!");
+  }
 }
 function handleLogout() {
     currentUser = null;
