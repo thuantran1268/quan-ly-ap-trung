@@ -88,12 +88,12 @@
         <header class="bg-emerald-700 text-white shadow-md py-3 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 relative">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-seedling text-2xl sm:text-3xl text-emerald-300"></i>
-                <h1 class="text-lg sm:text-xl font-bold text-center sm:text-left">Hệ Thống Quản Lý Lò Ấp Trứng</h1>
+                <h1 id="headerTitle" class="text-lg sm:text-xl font-bold text-center sm:text-left">Hệ Thống Quản Lý Lò Ấp Trứng</h1>
             </div>
             
             <div class="flex items-center space-x-4 text-sm">
-                <!-- KHUNG CHUÔNG THÔNG BÁO ĐÃ SỬA GIAO DIỆN DI ĐỘNG -->
-                <div class="relative">
+                <!-- KHUNG CHUÔNG THÔNG BÁO -->
+                <div class="relative" id="notificationArea">
                     <button onclick="toggleNotificationDropdown()" class="relative bg-emerald-800 hover:bg-emerald-900 p-2.5 rounded-full transition flex items-center justify-center focus:outline-none" title="Thông báo đến hạn nở">
                         <i class="fa-solid fa-bell text-lg"></i>
                         <span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
@@ -117,7 +117,8 @@
         </header>
 
         <main class="container mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
-            <section class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-1 border border-emerald-100 h-fit">
+            <!-- CỘT THÊM ĐƠN (ẨN ĐI NẾU LÀ ADMIN) -->
+            <section id="addOrderSection" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-1 border border-emerald-100 h-fit">
                 <h2 class="text-base sm:text-lg font-bold text-emerald-800 mb-4 flex items-center">
                     <i class="fa-solid fa-plus-circle mr-2"></i> Thêm Đơn Đặt Giống Mới
                 </h2>
@@ -160,9 +161,10 @@
                 </form>
             </section>
 
-            <section class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-2 border border-emerald-100 flex flex-col">
+            <!-- CỘT DANH SÁCH (SẼ MỞ RỘNG TOÀN MÀN HÌNH NẾU LÀ ADMIN) -->
+            <section id="tableSection" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-2 border border-emerald-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-base sm:text-lg font-bold text-emerald-800 flex items-center">
+                    <h2 id="tableTitle" class="text-base sm:text-lg font-bold text-emerald-800 flex items-center">
                         <i class="fa-solid fa-list-check mr-2"></i> Danh Sách Đơn Hàng & Lịch Trình Ấp
                     </h2>
                 </div>
@@ -171,6 +173,7 @@
                     <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr class="bg-emerald-50 text-emerald-900 text-sm border-b border-emerald-200">
+                                <th id="thOwner" class="p-3 hidden">Chủ Lò</th>
                                 <th class="p-3">Khách Hàng</th>
                                 <th class="p-3">Giống & SL</th>
                                 <th class="p-3">Đơn Giá</th>
@@ -189,6 +192,10 @@
     </div>
 
     <script>
+        // CẤU HÌNH TÀI KHOẢN QUẢN TRỊ VIÊN
+        const ADMIN_USERNAME = "admin";
+        const ADMIN_PASSWORD = "12345678t";
+
         let currentUser = localStorage.getItem('currentUser') || null;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -239,6 +246,11 @@
             const username = document.getElementById('regUsername').value.trim().replace(/[.#$\[\]]/g, "_");
             const password = document.getElementById('regPassword').value;
 
+            if (username === ADMIN_USERNAME) {
+                alert('Tên tài khoản này đã được dùng làm hệ thống quản trị!');
+                return;
+            }
+
             db.ref('users/' + username).once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     alert('Tên tài khoản này đã tồn tại trên hệ thống!');
@@ -260,6 +272,15 @@
             const username = document.getElementById('loginUsername').value.trim().replace(/[.#$\[\]]/g, "_");
             const password = document.getElementById('loginPassword').value;
 
+            // Kiểm tra nếu là tài khoản admin cố định
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                currentUser = username;
+                localStorage.setItem('currentUser', currentUser);
+                checkAuthState();
+                return;
+            }
+
+            // Kiểm tra các tài khoản khách hàng khác trên Firebase
             db.ref('users/' + username).once('value', (snapshot) => {
                 const userData = snapshot.val();
                 if (userData && userData.password === password) {
@@ -285,8 +306,31 @@
             if (currentUser) {
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                document.getElementById('userWelcome').innerText = `Xin chào: ${currentUser}`;
-                loadOrdersRealtime();
+                
+                const addSection = document.getElementById('addOrderSection');
+                const tableSection = document.getElementById('tableSection');
+                const thOwner = document.getElementById('thOwner');
+                const notificationArea = document.getElementById('notificationArea');
+
+                if (currentUser === ADMIN_USERNAME) {
+                    // GIAO DIỆN DÀNH CHO ADMIN
+                    document.getElementById('userWelcome').innerText = `Quản Trị Viên: ${currentUser}`;
+                    addSection.classList.add('hidden');
+                    tableSection.classList.remove('lg:col-span-2');
+                    tableSection.classList.add('lg:col-span-3');
+                    thOwner.classList.remove('hidden');
+                    notificationArea.classList.add('hidden');
+                    loadAllOrdersForAdmin();
+                } else {
+                    // GIAO DIỆN DÀNH CHO KHÁCH HÀNG
+                    document.getElementById('userWelcome').innerText = `Xin chào: ${currentUser}`;
+                    addSection.classList.remove('hidden');
+                    tableSection.classList.remove('lg:col-span-3');
+                    tableSection.classList.add('lg:col-span-2');
+                    thOwner.classList.add('hidden');
+                    notificationArea.classList.remove('hidden');
+                    loadOrdersRealtime();
+                }
             } else {
                 authContainer.classList.remove('hidden');
                 appContainer.classList.add('hidden');
@@ -351,9 +395,10 @@
             }
         }
 
+        // Khách hàng thêm đơn
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if (!currentUser) return;
+            if (!currentUser || currentUser === ADMIN_USERNAME) return;
 
             const name = document.getElementById('customerName').value;
             const phone = document.getElementById('customerPhone').value;
@@ -402,6 +447,7 @@
             });
         });
 
+        // Tải đơn hàng của riêng khách
         function loadOrdersRealtime() {
             if (!currentUser) return;
             const tableBody = document.getElementById('orderTableBody');
@@ -435,7 +481,7 @@
                         <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
                         <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
                         <td class="p-3 text-center">
-                            <button onclick="deleteOrder('${order.id}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteOrder('${order.id}', '${currentUser}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     `;
                     tableBody.appendChild(row);
@@ -443,10 +489,59 @@
             });
         }
 
-        function deleteOrder(id) {
+        // Tải toàn bộ đơn của tất cả khách cho Admin
+        function loadAllOrdersForAdmin() {
+            if (currentUser !== ADMIN_USERNAME) return;
+            const tableBody = document.getElementById('orderTableBody');
+
+            db.ref('orders').on('value', (snapshot) => {
+                tableBody.innerHTML = '';
+                const allUsersData = snapshot.val();
+                let totalOrdersCount = 0;
+
+                if (allUsersData) {
+                    Object.keys(allUsersData).forEach(username => {
+                        const userOrders = allUsersData[username];
+                        if (userOrders) {
+                            Object.values(userOrders).forEach(order => {
+                                totalOrdersCount++;
+                                const displayPrice = order.price ? order.price : '0 đ';
+                                const row = document.createElement('tr');
+                                row.className = "hover:bg-gray-50";
+                                row.innerHTML = `
+                                    <td class="p-3 font-bold text-emerald-700">${username}</td>
+                                    <td class="p-3">
+                                        <div class="font-semibold">${order.name}</div>
+                                        <div class="text-xs text-gray-500">${order.phone}</div>
+                                    </td>
+                                    <td class="p-3">
+                                        <div>${order.breedText}</div>
+                                        <span class="text-xs text-emerald-600 font-semibold">${order.quantity} con</span>
+                                    </td>
+                                    <td class="p-3 text-gray-700">${displayPrice}</td>
+                                    <td class="p-3 text-emerald-700 font-medium">${order.enterDate}</td>
+                                    <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
+                                    <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
+                                    <td class="p-3 text-center">
+                                        <button onclick="deleteOrder('${order.id}', '${username}')" class="text-red-400 hover:text-red-600 p-1" title="Xóa đơn này của khách"><i class="fa-solid fa-trash"></i></button>
+                                    </td>
+                                `;
+                                tableBody.appendChild(row);
+                            });
+                        }
+                    });
+                }
+
+                if (totalOrdersCount === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-400">Chưa có đơn hàng nào trên hệ thống.</td></tr>`;
+                }
+            });
+        }
+
+        function deleteOrder(id, ownerUser) {
             if (!currentUser) return;
             if (confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
-                db.ref('orders/' + currentUser + '/' + id).remove();
+                db.ref('orders/' + ownerUser + '/' + id).remove();
             }
         }
     </script>
