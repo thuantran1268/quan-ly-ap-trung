@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Lò Ấp Trứng - Đa Tài Khoản</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e8f5e9',
+                        secondary: '#c8e6c9',
+                        accent: '#2e7d32',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-primary min-h-screen text-gray-800 flex flex-col">
+
+    <!-- KHU VỰC XÁC THỰC -->
+    <div id="authContainer" class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full max-w-md border border-emerald-100">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-seedling text-4xl text-emerald-600 mb-2"></i>
+                <h1 class="text-2xl font-bold text-emerald-800">Quản Lý Ấp Trứng</h1>
+                <p class="text-sm text-gray-500">Đăng nhập để quản lý trang trại của riêng bạn</p>
+            </div>
+
+            <div class="flex border-b mb-6">
+                <button id="tabLogin" onclick="switchTab('login')" class="flex-1 pb-2 font-semibold text-emerald-700 border-b-2 border-emerald-600">Đăng Nhập</button>
+                <button id="tabRegister" onclick="switchTab('register')" class="flex-1 pb-2 font-semibold text-gray-400">Đăng Ký</button>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Tên tài khoản</label>
+                    <input type="text" id="loginUsername" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Mật khẩu</label>
+                    <input type="password" id="loginPassword" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 transition">Đăng Nhập</button>
+            </form>
+
+            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Tên tài khoản mới</label>
+                    <input type="text" id="regUsername" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Mật khẩu</label>
+                    <input type="password" id="regPassword" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                </div>
+                <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-800 transition">Tạo Tài Khoản</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- KHU VỰC ỨNG DỤNG CHÍNH -->
+    <div id="appContainer" class="hidden min-h-screen flex flex-col">
+        <!-- Header có chuông thông báo kiểu ngân hàng -->
+        <header class="bg-emerald-700 text-white shadow-md py-3 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 relative">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-seedling text-2xl sm:text-3xl text-emerald-300"></i>
+                <h1 class="text-lg sm:text-xl font-bold text-center sm:text-left">Hệ Thống Quản Lý Lò Ấp Trứng</h1>
+            </div>
+            
+            <div class="flex items-center space-x-4 text-sm">
+                <!-- KHU VỰC CHUÔNG THÔNG BÁO -->
+                <div class="relative">
+                    <button onclick="toggleNotificationDropdown()" class="relative bg-emerald-800 hover:bg-emerald-900 p-2.5 rounded-full transition flex items-center justify-center focus:outline-none" title="Thông báo đến hạn nở">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                        <!-- Badge số lượng thông báo -->
+                        <span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                    </button>
+
+                    <!-- Hộp thoại dropdown danh sách thông báo -->
+                    <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                        <div class="bg-emerald-800 text-white px-4 py-3 font-semibold flex justify-between items-center">
+                            <span><i class="fa-solid fa-bell mr-1"></i> Lịch Nở Hôm Nay</span>
+                            <span id="notifCountText" class="text-xs bg-emerald-600 px-2 py-0.5 rounded-full">0 đơn</span>
+                        </div>
+                        <div id="notifList" class="max-h-72 overflow-y-auto divide-y divide-gray-100 text-sm">
+                            <!-- Các mục thông báo sẽ đổ vào đây -->
+                        </div>
+                    </div>
+                </div>
+
+                <span id="userWelcome" class="text-emerald-200 font-medium"></span>
+                <button onclick="handleLogout()" class="bg-emerald-800 hover:bg-emerald-900 px-3 py-1.5 rounded-lg transition">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Đăng xuất
+                </button>
+            </div>
+        </header>
+
+        <!-- Khung nội dung chính -->
+        <main class="container mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
+            <!-- Cột trái: Form nhập đơn -->
+            <section class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-1 border border-emerald-100 h-fit">
+                <h2 class="text-base sm:text-lg font-bold text-emerald-800 mb-4 flex items-center">
+                    <i class="fa-solid fa-plus-circle mr-2"></i> Thêm Đơn Đặt Giống Mới
+                </h2>
+                <form id="orderForm" class="space-y-3 sm:space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Tên khách hàng</label>
+                        <input type="text" id="customerName" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: Nguyễn Văn A">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Số điện thoại</label>
+                        <input type="text" id="customerPhone" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="0912345678">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Loại giống</label>
+                        <select id="breedType" onchange="updateDefaultPrice()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base bg-white">
+                            <option value="ga" data-days="21" data-price="5000">Gà (Ấp 21 ngày)</option>
+                            <option value="vit" data-days="28" data-price="6000">Vịt (Ấp 28 ngày)</option>
+                            <option value="ngan" data-days="31" data-price="10000">Ngan (Ấp 31 ngày)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Đơn giá (VNĐ / con - Có thể sửa)</label>
+                        <input type="number" id="breedPrice" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: 5000">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Số lượng đặt</label>
+                        <input type="number" id="quantity" min="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: 200">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Ngày nhận đơn / đặt cọc</label>
+                        <input type="date" id="orderDate" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Tiền khách đã cọc (VNĐ)</label>
+                        <input type="number" id="deposit" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: 200000">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 transition text-base">
+                        <i class="fa-solid fa-calculator mr-1"></i> Lưu Đơn & Tự Động Tính Ngày
+                    </button>
+                </form>
+            </section>
+
+            <!-- Cột phải: Bảng dữ liệu -->
+            <section class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-2 border border-emerald-100 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-base sm:text-lg font-bold text-emerald-800 flex items-center">
+                        <i class="fa-solid fa-list-check mr-2"></i> Danh Sách Đơn Hàng & Lịch Trình Ấp
+                    </h2>
+                </div>
+
+                <div class="overflow-x-auto flex-grow -mx-4 sm:mx-0 px-4 sm:px-0">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
+                        <thead>
+                            <tr class="bg-emerald-50 text-emerald-900 text-sm border-b border-emerald-200">
+                                <th class="p-3">Khách Hàng</th>
+                                <th class="p-3">Giống & SL</th>
+                                <th class="p-3">Đơn Giá</th>
+                                <th class="p-3">Cho Vào Máy</th>
+                                <th class="p-3">Ngày Nở Dự Kiến</th>
+                                <th class="p-3">Công Nợ (Còn Thiếu)</th>
+                                <th class="p-3 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody" class="text-sm divide-y divide-gray-100">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Đoạn mã xử lý Javascript, Âm thanh chuông thông báo và logic hiển thị -->
+    <script>
+        let currentUser = localStorage.getItem('currentUser') || null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('orderDate').valueAsDate = new Date();
+            updateDefaultPrice();
+            checkAuthState();
+            
+            // Đóng hộp thông báo khi click ra ngoài
+            window.addEventListener('click', function(e) {
+                const dropdown = document.getElementById('notifDropdown');
+                const bellBtn = e.target.closest('button[onclick="toggleNotificationDropdown()"]');
+                if (!dropdown.contains(e.target) && !bellBtn && !dropdown.classList.contains('hidden')) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        });
+
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString('en-US') + ' đ';
+        }
+
+        function updateDefaultPrice() {
+            const breedSelect = document.getElementById('breedType');
+            const selectedOption = breedSelect.options[breedSelect.selectedIndex];
+            const defaultPrice = selectedOption.getAttribute('data-price');
+            document.getElementById('breedPrice').value = defaultPrice;
+        }
+
+        function switchTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLogin.className = "flex-1 pb-2 font-semibold text-emerald-700 border-b-2 border-emerald-600";
+                tabRegister.className = "flex-1 pb-2 font-semibold text-gray-400";
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabRegister.className = "flex-1 pb-2 font-semibold text-emerald-700 border-b-2 border-emerald-600";
+                tabLogin.className = "flex-1 pb-2 font-semibold text-gray-400";
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            let users = JSON.parse(localStorage.getItem('users')) || {};
+            if (users[username]) {
+                alert('Tên tài khoản này đã tồn tại!');
+                return;
+            }
+
+            users[username] = password;
+            localStorage.setItem('users', JSON.stringify(users));
+            alert('Đăng ký thành công! Hãy đăng nhập.');
+            switchTab('login');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            let users = JSON.parse(localStorage.getItem('users')) || {};
+            if (users[username] && users[username] === password) {
+                currentUser = username;
+                localStorage.setItem('currentUser', currentUser);
+                checkAuthState();
+            } else {
+                alert('Sai tên tài khoản hoặc mật khẩu!');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            checkAuthState();
+        }
+
+        function checkAuthState() {
+            const authContainer = document.getElementById('authContainer');
+            const appContainer = document.getElementById('appContainer');
+
+            if (currentUser) {
+                authContainer.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                document.getElementById('userWelcome').innerText = `Xin chào: ${currentUser}`;
+                loadOrders();
+            } else {
+                authContainer.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            }
+        }
+
+        // Tạo âm thanh chuông "Ting Ting" bằng Web Audio API (Không cần file nhạc ngoài)
+        function playNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Âm cao (note A5)
+                osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
+
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+                console.log("Audio not allowed yet by browser policy");
+            }
+        }
+
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Kiểm tra và cập nhật hệ thống thông báo chuông
+        function checkNotifications(orders) {
+            const todayStr = new Date().toLocaleDateString('en-GB'); // Định dạng DD/MM/YYYY giống chuỗi ngày lưu
+            const badge = document.getElementById('notifBadge');
+            const notifList = document.getElementById('notifList');
+            const notifCountText = document.getElementById('notifCountText');
+
+            // Lọc ra các đơn hàng có ngày nở trùng với ngày hôm nay
+            const dueToday = orders.filter(order => order.hatchDate === todayStr);
+
+            notifList.innerHTML = '';
+            if (dueToday.length > 0) {
+                badge.innerText = dueToday.length;
+                badge.classList.remove('hidden');
+                notifCountText.innerText = dueToday.length + ' đơn hôm nay';
+
+                dueToday.forEach(order => {
+                    const item = document.createElement('div');
+                    item.className = "p-3 hover:bg-emerald-50 transition cursor-pointer";
+                    item.innerHTML = `
+                        <div class="font-semibold text-emerald-800"><i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> ${order.name} (${order.phone})</div>
+                        <div class="text-xs text-gray-600 mt-1">Đến hẹn lấy: <span class="font-bold text-red-600">${order.breedText} - ${order.quantity} con</span></div>
+                    `;
+                    notifList.appendChild(item);
+                });
+
+                // Phát âm thanh báo động/ting ting nhẹ khi có đơn đến hạn
+                playNotificationSound();
+            } else {
+                badge.classList.add('hidden');
+                notifCountText.innerText = '0 đơn';
+                notifList.innerHTML = `<div class="p-4 text-center text-gray-400 text-sm">Không có đơn nào đến hạn nở hôm nay.</div>`;
+            }
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const name = document.getElementById('customerName').value;
+            const phone = document.getElementById('customerPhone').value;
+            const breedSelect = document.getElementById('breedType');
+            const breedText = breedSelect.options[breedSelect.selectedIndex].text.split(' ')[0];
+            
+            const customPrice = parseInt(document.getElementById('breedPrice').value) || 0;
+            const incubateDays = parseInt(breedSelect.options[breedSelect.selectedIndex].getAttribute('data-days'));
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const orderDateVal = document.getElementById('orderDate').value;
+            const deposit = parseInt(document.getElementById('deposit').value) || 0;
+
+            const totalPrice = quantity * customPrice;
+            const remainingDebt = totalPrice - deposit;
+
+            const orderDate = new Date(orderDateVal);
+            const enterMachineDate = new Date(orderDate);
+            const hatchDate = new Date(enterMachineDate);
+            hatchDate.setDate(enterMachineDate.getDate() + incubateDays);
+
+            const formatDate = (date) => {
+                const d = String(date.getDate()).padStart(2, '0');
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}/${m}/${y}`;
+            };
+
+            const newOrder = {
+                id: Date.now(),
+                name, phone, breedText, quantity,
+                price: formatMoney(customPrice),
+                enterDate: formatDate(enterMachineDate),
+                hatchDate: formatDate(hatchDate),
+                debt: formatMoney(remainingDebt)
+            };
+
+            let allOrders = JSON.parse(localStorage.getItem('orders_' + currentUser)) || [];
+            allOrders.push(newOrder);
+            localStorage.setItem('orders_' + currentUser, JSON.stringify(allOrders));
+
+            document.getElementById('orderForm').reset();
+            document.getElementById('orderDate').valueAsDate = new Date();
+            updateDefaultPrice();
+            loadOrders();
+        });
+
+        function loadOrders() {
+            if (!currentUser) return;
+            const tableBody = document.getElementById('orderTableBody');
+            tableBody.innerHTML = '';
+
+            let allOrders = JSON.parse(localStorage.getItem('orders_' + currentUser)) || [];
+            
+            // Chạy kiểm tra chuông thông báo mỗi khi tải lại bảng dữ liệu
+            checkNotifications(allOrders);
+
+            allOrders.forEach((order) => {
+                const displayPrice = order.price ? order.price : '0 đ';
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-50";
+                row.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-semibold">${order.name}</div>
+                        <div class="text-xs text-gray-500">${order.phone}</div>
+                    </td>
+                    <td class="p-3">
+                        <div>${order.breedText}</div>
+                        <span class="text-xs text-emerald-600 font-semibold">${order.quantity} con</span>
+                    </td>
+                    <td class="p-3 text-gray-700">${displayPrice}</td>
+                    <td class="p-3 text-emerald-700 font-medium">${order.enterDate}</td>
+                    <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
+                    <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="deleteOrder(${order.id})" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function deleteOrder(id) {
+            if (!currentUser) return;
+            let allOrders = JSON.parse(localStorage.getItem('orders_' + currentUser)) || [];
+            allOrders = allOrders.filter(order => order.id !== id);
+            localStorage.setItem('orders_' + currentUser, JSON.stringify(allOrders));
+            loadOrders();
+        }
+    </script>
+</body>
+</html>
