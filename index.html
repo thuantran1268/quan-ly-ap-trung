@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Lò Ấp Trứng - Đa Tài Khoản</title>
+    <title>Hệ Thống Quản Lý Lò Ấp Trứng - Đám Mây Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Nhúng thư viện Firebase SDK bản tương thích -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -22,13 +27,31 @@
 </head>
 <body class="bg-primary min-h-screen text-gray-800 flex flex-col">
 
+    <!-- CẤU HÌNH FIREBASE CHÍNH XÁC CỦA BẠN -->
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFmwAXG4tgiE7hDUsfelHubULgKmEy0S4",
+            authDomain: "quanlyaptrung.firebaseapp.com",
+            databaseURL: "https://quanlyaptrung-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "quanlyaptrung",
+            storageBucket: "quanlyaptrung.firebasestorage.app",
+            messagingSenderId: "51326284444",
+            appId: "1:51326284444:web:84daa316d9abd965a8b359"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
+
     <!-- KHU VỰC XÁC THỰC -->
     <div id="authContainer" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full max-w-md border border-emerald-100">
             <div class="text-center mb-6">
-                <i class="fa-solid fa-seedling text-4xl text-emerald-600 mb-2"></i>
-                <h1 class="text-2xl font-bold text-emerald-800">Quản Lý Ấp Trứng</h1>
-                <p class="text-sm text-gray-500">Đăng nhập để quản lý trang trại của riêng bạn</p>
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-emerald-600 mb-2"></i>
+                <h1 class="text-2xl font-bold text-emerald-800">Quản Lý Ấp Trứng Online</h1>
+                <p class="text-sm text-gray-500">Đồng bộ dữ liệu đa thiết bị qua đám mây</p>
             </div>
 
             <div class="flex border-b mb-6">
@@ -64,7 +87,6 @@
 
     <!-- KHU VỰC ỨNG DỤNG CHÍNH -->
     <div id="appContainer" class="hidden min-h-screen flex flex-col">
-        <!-- Header có chuông thông báo kiểu ngân hàng -->
         <header class="bg-emerald-700 text-white shadow-md py-3 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 relative">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-seedling text-2xl sm:text-3xl text-emerald-300"></i>
@@ -72,22 +94,18 @@
             </div>
             
             <div class="flex items-center space-x-4 text-sm">
-                <!-- KHU VỰC CHUÔNG THÔNG BÁO -->
                 <div class="relative">
                     <button onclick="toggleNotificationDropdown()" class="relative bg-emerald-800 hover:bg-emerald-900 p-2.5 rounded-full transition flex items-center justify-center focus:outline-none" title="Thông báo đến hạn nở">
                         <i class="fa-solid fa-bell text-lg"></i>
-                        <!-- Badge số lượng thông báo -->
                         <span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </button>
 
-                    <!-- Hộp thoại dropdown danh sách thông báo -->
                     <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
                         <div class="bg-emerald-800 text-white px-4 py-3 font-semibold flex justify-between items-center">
                             <span><i class="fa-solid fa-bell mr-1"></i> Lịch Nở Hôm Nay</span>
                             <span id="notifCountText" class="text-xs bg-emerald-600 px-2 py-0.5 rounded-full">0 đơn</span>
                         </div>
                         <div id="notifList" class="max-h-72 overflow-y-auto divide-y divide-gray-100 text-sm">
-                            <!-- Các mục thông báo sẽ đổ vào đây -->
                         </div>
                     </div>
                 </div>
@@ -99,9 +117,7 @@
             </div>
         </header>
 
-        <!-- Khung nội dung chính -->
         <main class="container mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
-            <!-- Cột trái: Form nhập đơn -->
             <section class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-1 border border-emerald-100 h-fit">
                 <h2 class="text-base sm:text-lg font-bold text-emerald-800 mb-4 flex items-center">
                     <i class="fa-solid fa-plus-circle mr-2"></i> Thêm Đơn Đặt Giống Mới
@@ -124,12 +140,12 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Đơn giá (VNĐ / con - Có thể sửa)</label>
-                        <input type="number" id="breedPrice" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: 5000">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Đơn giá (VNĐ / con)</label>
+                        <input type="number" id="breedPrice" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Số lượng đặt</label>
-                        <input type="number" id="quantity" min="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: 200">
+                        <input type="number" id="quantity" min="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Ngày nhận đơn / đặt cọc</label>
@@ -137,15 +153,14 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">Tiền khách đã cọc (VNĐ)</label>
-                        <input type="number" id="deposit" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: 200000">
+                        <input type="number" id="deposit" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
                     </div>
                     <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 transition text-base">
-                        <i class="fa-solid fa-calculator mr-1"></i> Lưu Đơn & Tự Động Tính Ngày
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Đơn
                     </button>
                 </form>
             </section>
 
-            <!-- Cột phải: Bảng dữ liệu -->
             <section class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-2 border border-emerald-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-base sm:text-lg font-bold text-emerald-800 flex items-center">
@@ -174,7 +189,6 @@
         </main>
     </div>
 
-    <!-- Đoạn mã xử lý Javascript, Âm thanh chuông thông báo và logic hiển thị -->
     <script>
         let currentUser = localStorage.getItem('currentUser') || null;
 
@@ -183,7 +197,6 @@
             updateDefaultPrice();
             checkAuthState();
             
-            // Đóng hộp thông báo khi click ra ngoài
             window.addEventListener('click', function(e) {
                 const dropdown = document.getElementById('notifDropdown');
                 const bellBtn = e.target.closest('button[onclick="toggleNotificationDropdown()"]');
@@ -200,8 +213,7 @@
         function updateDefaultPrice() {
             const breedSelect = document.getElementById('breedType');
             const selectedOption = breedSelect.options[breedSelect.selectedIndex];
-            const defaultPrice = selectedOption.getAttribute('data-price');
-            document.getElementById('breedPrice').value = defaultPrice;
+            document.getElementById('breedPrice').value = selectedOption.getAttribute('data-price');
         }
 
         function switchTab(tab) {
@@ -225,34 +237,40 @@
 
         function handleRegister(e) {
             e.preventDefault();
-            const username = document.getElementById('regUsername').value.trim();
+            const username = document.getElementById('regUsername').value.trim().replace(/[.#$\[\]]/g, "_");
             const password = document.getElementById('regPassword').value;
 
-            let users = JSON.parse(localStorage.getItem('users')) || {};
-            if (users[username]) {
-                alert('Tên tài khoản này đã tồn tại!');
-                return;
-            }
-
-            users[username] = password;
-            localStorage.setItem('users', JSON.stringify(users));
-            alert('Đăng ký thành công! Hãy đăng nhập.');
-            switchTab('login');
+            db.ref('users/' + username).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    alert('Tên tài khoản này đã tồn tại trên hệ thống!');
+                } else {
+                    db.ref('users/' + username).set({ password: password }, (error) => {
+                        if (error) {
+                            alert('Đăng ký thất bại!');
+                        } else {
+                            alert('Đăng ký thành công! Hãy đăng nhập.');
+                            switchTab('login');
+                        }
+                    });
+                }
+            });
         }
 
         function handleLogin(e) {
             e.preventDefault();
-            const username = document.getElementById('loginUsername').value.trim();
+            const username = document.getElementById('loginUsername').value.trim().replace(/[.#$\[\]]/g, "_");
             const password = document.getElementById('loginPassword').value;
 
-            let users = JSON.parse(localStorage.getItem('users')) || {};
-            if (users[username] && users[username] === password) {
-                currentUser = username;
-                localStorage.setItem('currentUser', currentUser);
-                checkAuthState();
-            } else {
-                alert('Sai tên tài khoản hoặc mật khẩu!');
-            }
+            db.ref('users/' + username).once('value', (snapshot) => {
+                const userData = snapshot.val();
+                if (userData && userData.password === password) {
+                    currentUser = username;
+                    localStorage.setItem('currentUser', currentUser);
+                    checkAuthState();
+                } else {
+                    alert('Sai tên tài khoản hoặc mật khẩu!');
+                }
+            });
         }
 
         function handleLogout() {
@@ -269,14 +287,13 @@
                 authContainer.classList.add('hidden');
                 appContainer.classList.remove('hidden');
                 document.getElementById('userWelcome').innerText = `Xin chào: ${currentUser}`;
-                loadOrders();
+                loadOrdersRealtime();
             } else {
                 authContainer.classList.remove('hidden');
                 appContainer.classList.add('hidden');
             }
         }
 
-        // Tạo âm thanh chuông "Ting Ting" bằng Web Audio API (Không cần file nhạc ngoài)
         function playNotificationSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -284,7 +301,7 @@
                 const gainNode = audioCtx.createGain();
 
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Âm cao (note A5)
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
 
                 gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
@@ -296,23 +313,20 @@
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.5);
             } catch (e) {
-                console.log("Audio not allowed yet by browser policy");
+                console.log("Audio locked");
             }
         }
 
         function toggleNotificationDropdown() {
-            const dropdown = document.getElementById('notifDropdown');
-            dropdown.classList.toggle('hidden');
+            document.getElementById('notifDropdown').classList.toggle('hidden');
         }
 
-        // Kiểm tra và cập nhật hệ thống thông báo chuông
         function checkNotifications(orders) {
-            const todayStr = new Date().toLocaleDateString('en-GB'); // Định dạng DD/MM/YYYY giống chuỗi ngày lưu
+            const todayStr = new Date().toLocaleDateString('en-GB');
             const badge = document.getElementById('notifBadge');
             const notifList = document.getElementById('notifList');
             const notifCountText = document.getElementById('notifCountText');
 
-            // Lọc ra các đơn hàng có ngày nở trùng với ngày hôm nay
             const dueToday = orders.filter(order => order.hatchDate === todayStr);
 
             notifList.innerHTML = '';
@@ -330,8 +344,6 @@
                     `;
                     notifList.appendChild(item);
                 });
-
-                // Phát âm thanh báo động/ting ting nhẹ khi có đơn đến hạn
                 playNotificationSound();
             } else {
                 badge.classList.add('hidden');
@@ -370,8 +382,9 @@
                 return `${d}/${m}/${y}`;
             };
 
+            const orderId = 'order_' + Date.now();
             const newOrder = {
-                id: Date.now(),
+                id: orderId,
                 name, phone, breedText, quantity,
                 price: formatMoney(customPrice),
                 enterDate: formatDate(enterMachineDate),
@@ -379,58 +392,63 @@
                 debt: formatMoney(remainingDebt)
             };
 
-            let allOrders = JSON.parse(localStorage.getItem('orders_' + currentUser)) || [];
-            allOrders.push(newOrder);
-            localStorage.setItem('orders_' + currentUser, JSON.stringify(allOrders));
-
-            document.getElementById('orderForm').reset();
-            document.getElementById('orderDate').valueAsDate = new Date();
-            updateDefaultPrice();
-            loadOrders();
+            db.ref('orders/' + currentUser + '/' + orderId).set(newOrder, (error) => {
+                if (error) {
+                    alert('Lưu đơn thất bại!');
+                } else {
+                    document.getElementById('orderForm').reset();
+                    document.getElementById('orderDate').valueAsDate = new Date();
+                    updateDefaultPrice();
+                }
+            });
         });
 
-        function loadOrders() {
+        function loadOrdersRealtime() {
             if (!currentUser) return;
             const tableBody = document.getElementById('orderTableBody');
-            tableBody.innerHTML = '';
 
-            let allOrders = JSON.parse(localStorage.getItem('orders_' + currentUser)) || [];
-            
-            // Chạy kiểm tra chuông thông báo mỗi khi tải lại bảng dữ liệu
-            checkNotifications(allOrders);
+            db.ref('orders/' + currentUser).on('value', (snapshot) => {
+                tableBody.innerHTML = '';
+                const data = snapshot.val();
+                let allOrders = [];
 
-            allOrders.forEach((order) => {
-                const displayPrice = order.price ? order.price : '0 đ';
+                if (data) {
+                    allOrders = Object.values(data);
+                }
 
-                const row = document.createElement('tr');
-                row.className = "hover:bg-gray-50";
-                row.innerHTML = `
-                    <td class="p-3">
-                        <div class="font-semibold">${order.name}</div>
-                        <div class="text-xs text-gray-500">${order.phone}</div>
-                    </td>
-                    <td class="p-3">
-                        <div>${order.breedText}</div>
-                        <span class="text-xs text-emerald-600 font-semibold">${order.quantity} con</span>
-                    </td>
-                    <td class="p-3 text-gray-700">${displayPrice}</td>
-                    <td class="p-3 text-emerald-700 font-medium">${order.enterDate}</td>
-                    <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
-                    <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="deleteOrder(${order.id})" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
+                checkNotifications(allOrders);
+
+                allOrders.forEach((order) => {
+                    const displayPrice = order.price ? order.price : '0 đ';
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-gray-50";
+                    row.innerHTML = `
+                        <td class="p-3">
+                            <div class="font-semibold">${order.name}</div>
+                            <div class="text-xs text-gray-500">${order.phone}</div>
+                        </td>
+                        <td class="p-3">
+                            <div>${order.breedText}</div>
+                            <span class="text-xs text-emerald-600 font-semibold">${order.quantity} con</span>
+                        </td>
+                        <td class="p-3 text-gray-700">${displayPrice}</td>
+                        <td class="p-3 text-emerald-700 font-medium">${order.enterDate}</td>
+                        <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
+                        <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="deleteOrder('${order.id}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
             });
         }
 
         function deleteOrder(id) {
             if (!currentUser) return;
-            let allOrders = JSON.parse(localStorage.getItem('orders_' + currentUser)) || [];
-            allOrders = allOrders.filter(order => order.id !== id);
-            localStorage.setItem('orders_' + currentUser, JSON.stringify(allOrders));
-            loadOrders();
+            if (confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
+                db.ref('orders/' + currentUser + '/' + id).remove();
+            }
         }
     </script>
 </body>
