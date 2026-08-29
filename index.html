@@ -34,7 +34,7 @@
         }
     </script>
 </head>
-<body class="bg-primary min-h-screen text-gray-800 flex flex-col relative">
+<body class="bg-primary min-h-screen text-gray-800 flex flex-col relative transition-all duration-300">
 
     <!-- KHỞI TẠO FIREBASE -->
     <script>
@@ -96,15 +96,20 @@
     <div id="appContainer" class="hidden min-h-screen flex flex-col">
         <header class="bg-emerald-700 text-white shadow-md py-3 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3 relative">
             <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-seedling text-2xl sm:text-3xl text-emerald-300"></i>
+                <div id="headerLogoContainer">
+                    <i class="fa-solid fa-seedling text-2xl sm:text-3xl text-emerald-300"></i>
+                </div>
                 <h1 id="headerTitle" class="text-lg sm:text-xl font-bold text-center sm:text-left">Hệ Thống Quản Lý Lò Ấp Trứng</h1>
             </div>
             
             <div class="flex flex-wrap items-center justify-center sm:justify-end gap-3 text-sm">
-                <!-- WIDGET THỜI TIẾT TỰ ĐỘNG -->
-                <div id="weatherWidget" class="bg-emerald-800/80 px-3 py-1.5 rounded-lg flex items-center space-x-2 border border-emerald-600 text-emerald-100">
-                    <i class="fa-solid fa-cloud-sun text-yellow-300"></i>
-                    <span id="weatherText">Đang tải thời tiết...</span>
+                <!-- WIDGET THỜI TIẾT TỰ ĐỘNG & DỰ BÁO -->
+                <div class="relative">
+                    <div id="weatherWidget" onclick="toggleWeatherDropdown()" class="bg-emerald-800/80 px-3 py-1.5 rounded-lg flex items-center space-x-2 border border-emerald-600 text-emerald-100 cursor-pointer hover:bg-emerald-800 transition">
+                        <i class="fa-solid fa-cloud-sun text-yellow-300"></i>
+                        <span id="weatherText">Đang tải thời tiết...</span>
+                        <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+                    </div>
                 </div>
 
                 <span id="userWelcome" class="text-emerald-200 font-medium"></span>
@@ -114,49 +119,134 @@
             </div>
         </header>
 
+        <!-- MODAL / POPUP THỜI TIẾT LUÔN CĂN GIỮA MÀN HÌNH -->
+        <div id="weatherDropdown" class="hidden fixed inset-0 z-[999999] flex items-center justify-center bg-black/40 p-4">
+            <div class="bg-white text-gray-800 rounded-2xl shadow-2xl border border-emerald-100 p-5 w-full max-w-sm relative animate-fadeIn">
+                <button onclick="toggleWeatherDropdown()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+                <div class="font-bold text-emerald-800 border-b pb-2 mb-3 flex items-center pr-8">
+                    <i class="fa-solid fa-location-dot text-red-500 mr-2 text-lg"></i>
+                    <span id="weatherLocationName" class="text-base">Đang xác định vị trí...</span>
+                </div>
+                <div id="weatherForecastDetails" class="space-y-2 text-sm">
+                    <p class="text-gray-500 text-center py-4">Đang tải dự báo...</p>
+                </div>
+                <button onclick="toggleWeatherDropdown()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-xl transition">
+                    Đóng
+                </button>
+            </div>
+        </div>
+
         <main class="container mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
-            <!-- CỘT THÊM ĐƠN -->
-            <section id="addOrderSection" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-1 border border-emerald-100 h-fit">
-                <h2 class="text-base sm:text-lg font-bold text-emerald-800 mb-4 flex items-center">
-                    <i class="fa-solid fa-plus-circle mr-2"></i> Thêm Đơn Đặt Giống Mới
-                </h2>
-                <form id="orderForm" class="space-y-3 sm:space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Tên khách hàng</label>
-                        <input type="text" id="customerName" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: Nguyễn Văn A">
+            <!-- CỘT BÊN TRÁI: THÊM ĐƠN, TRA CỨU & CÀI ĐẶT ADMIN -->
+            <section class="lg:col-span-1 space-y-6">
+                <!-- KHU VỰC CÀI ĐẶT GIAO DIỆN (CHỈ DÀNH CHO ADMIN) -->
+                <div id="adminSettingsSection" class="hidden bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-emerald-100">
+                    <h2 class="text-base sm:text-lg font-bold text-emerald-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-sliders mr-2"></i> Tinh Chỉnh Giao Diện Website
+                    </h2>
+                    <form id="settingsForm" onsubmit="saveSiteSettings(event)" class="space-y-3 sm:space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Tên Tiêu Đề Website</label>
+                            <input type="text" id="settingSiteTitle" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Hệ Thống Quản Lý Lò Ấp Trứng">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Link Ảnh Logo (URL)</label>
+                            <input type="url" id="settingLogoUrl" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="https://example.com/logo.png">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Link Ảnh Hình Nền (URL)</label>
+                            <input type="url" id="settingBgUrl" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="https://example.com/background.jpg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Màu Chủ Đạo (Mã màu HEX)</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="color" id="settingPrimaryColor" value="#2e7d32" class="w-12 h-10 border rounded cursor-pointer">
+                                <input type="text" id="settingPrimaryColorText" class="w-full px-3 py-2 border rounded-lg text-base uppercase" placeholder="#2E7D32">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 transition text-base">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Cài Đặt Giao Diện
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 1. THÊM ĐƠN ĐẶT GIỐNG MỚI -->
+                <div id="addOrderSection" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-emerald-100">
+                    <h2 class="text-base sm:text-lg font-bold text-emerald-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-plus-circle mr-2"></i> Thêm Đơn Đặt Giống Mới
+                    </h2>
+                    <form id="orderForm" class="space-y-3 sm:space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Tên khách hàng</label>
+                            <input type="text" id="customerName" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="Ví dụ: Nguyễn Văn A">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Số điện thoại</label>
+                            <input type="text" id="customerPhone" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="0912345678">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Loại giống</label>
+                            <select id="breedType" onchange="updateDefaultPrice()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base bg-white">
+                                <option value="ga" data-days="21" data-price="5000">Gà (Ấp 21 ngày)</option>
+                                <option value="vit" data-days="28" data-price="6000">Vịt (Ấp 28 ngày)</option>
+                                <option value="ngan" data-days="31" data-price="10000">Ngan (Ấp 31 ngày)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Đơn giá (VNĐ / con)</label>
+                            <input type="number" id="breedPrice" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Số lượng đặt</label>
+                            <input type="number" id="quantity" min="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Ngày nhận đơn / đặt cọc</label>
+                            <input type="date" id="orderDate" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Tiền khách đã cọc (VNĐ)</label>
+                            <input type="number" id="deposit" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 transition text-base">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Đơn
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 2. VÙNG ĐỘC LẬP: TRA CỨU NGÀY VÀO TRỨNG -->
+                <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-emerald-100">
+                    <h2 class="text-base sm:text-lg font-bold text-emerald-800 mb-2 flex items-center">
+                        <i class="fa-solid fa-calculator mr-2 text-emerald-600"></i> Tra Cứu Ngày Vào Trứng
+                    </h2>
+                    <p class="text-xs text-gray-500 mb-4">Dành cho khách hàng tham khảo nhanh lịch ấp nở.</p>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Chọn loại giống</label>
+                            <select id="refBreedType" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base bg-white">
+                                <option value="21">Gà (Ấp 21 ngày)</option>
+                                <option value="28">Vịt (Ấp 28 ngày)</option>
+                                <option value="31">Ngan (Ấp 31 ngày)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Dự kiến ngày trứng nở</label>
+                            <input type="date" id="refHatchDate" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
+                        </div>
+                        <button type="button" onclick="calculateReferenceDate()" class="w-full bg-emerald-700 text-white font-semibold py-2 rounded-lg hover:bg-emerald-800 transition text-sm">
+                            <i class="fa-solid fa-magnifying-glass mr-1"></i> Tính Ngày Vào Trứng
+                        </button>
+
+                        <!-- KẾT QUẢ HIỂN THỊ -->
+                        <div id="refResultBox" class="hidden mt-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
+                            <div class="text-xs text-gray-600">Cần cho trứng vào máy vào ngày:</div>
+                            <div id="refResultDate" class="text-base font-bold text-emerald-800 mt-0.5">--/--/----</div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Số điện thoại</label>
-                        <input type="text" id="customerPhone" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base" placeholder="0912345678">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Loại giống</label>
-                        <select id="breedType" onchange="updateDefaultPrice()" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base bg-white">
-                            <option value="ga" data-days="21" data-price="5000">Gà (Ấp 21 ngày)</option>
-                            <option value="vit" data-days="28" data-price="6000">Vịt (Ấp 28 ngày)</option>
-                            <option value="ngan" data-days="31" data-price="10000">Ngan (Ấp 31 ngày)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Đơn giá (VNĐ / con)</label>
-                        <input type="number" id="breedPrice" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Số lượng đặt</label>
-                        <input type="number" id="quantity" min="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Ngày nhận đơn / đặt cọc</label>
-                        <input type="date" id="orderDate" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Tiền khách đã cọc (VNĐ)</label>
-                        <input type="number" id="deposit" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-base">
-                    </div>
-                    <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg hover:bg-emerald-700 transition text-base">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i> Lưu Đơn
-                    </button>
-                </form>
+                </div>
             </section>
 
             <!-- CỘT DANH SÁCH & TÌM KIẾM -->
@@ -174,19 +264,19 @@
                         <input type="text" id="searchKeyword" oninput="filterOrdersTable()" placeholder="Tìm tên hoặc SĐT..." class="w-full pl-9 pr-3 py-1.5 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm bg-white">
                     </div>
 
-                    <!-- NÚT SAO LƯU -->
+                    <!-- NÚT SAO LƯU (THU NHỎ GỌN GÀNG) -->
                     <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                        <button onclick="exportToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg transition flex items-center shadow">
-                            <i class="fa-solid fa-file-excel mr-1.5"></i> Tải Excel
+                        <button onclick="exportToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2.5 py-1 rounded-md transition flex items-center shadow-sm">
+                            <i class="fa-solid fa-file-excel mr-1"></i> Tải Excel
                         </button>
-                        <button onclick="exportToText()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg transition flex items-center shadow">
-                            <i class="fa-solid fa-file-lines mr-1.5"></i> Tải .txt
+                        <button onclick="exportToText()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-2.5 py-1 rounded-md transition flex items-center shadow-sm">
+                            <i class="fa-solid fa-file-lines mr-1"></i> Tải .txt
                         </button>
                     </div>
                 </div>
 
                 <div class="overflow-x-auto flex-grow -mx-4 sm:mx-0 px-4 sm:px-0">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
+                    <table class="w-full text-left border-collapse min-w-[850px]">
                         <thead>
                             <tr class="bg-emerald-50 text-emerald-900 text-sm border-b border-emerald-200">
                                 <th id="thOwner" class="p-3 hidden">Chủ Lò</th>
@@ -233,10 +323,28 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('orderDate').valueAsDate = new Date();
+            const refHatchInput = document.getElementById('refHatchDate');
+            if(refHatchInput) refHatchInput.valueAsDate = new Date();
+
             updateDefaultPrice();
             checkAuthState();
             initDraggableFloatingButton();
             fetchWeather();
+            loadSiteSettings();
+
+            // Đồng bộ ô chọn màu và mã HEX
+            const colorPicker = document.getElementById('settingPrimaryColor');
+            const colorText = document.getElementById('settingPrimaryColorText');
+            if (colorPicker && colorText) {
+                colorPicker.addEventListener('input', (e) => {
+                    colorText.value = e.target.value;
+                });
+                colorText.addEventListener('input', (e) => {
+                    if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                        colorPicker.value = e.target.value;
+                    }
+                });
+            }
 
             window.addEventListener('click', function(e) {
                 const dropdown = document.getElementById('notifDropdown');
@@ -247,9 +355,108 @@
             });
         });
 
-        // HÀM LẤY THỜI TIẾT TỰ ĐỘNG THEO VỊ TRÍ
-        function fetchWeather() {
+        // Tải và áp dụng cài đặt giao diện từ Firebase
+        function loadSiteSettings() {
+            db.ref('settings').on('value', (snapshot) => {
+                const config = snapshot.val();
+                if (!config) return;
+
+                if (config.siteTitle) {
+                    document.title = config.siteTitle;
+                    const headerTitle = document.getElementById('headerTitle');
+                    if (headerTitle) headerTitle.innerText = config.siteTitle;
+                    const authTitle = document.querySelector('#authContainer h1');
+                    if (authTitle) authTitle.innerText = config.siteTitle;
+                }
+
+                if (config.logoUrl) {
+                    const logoContainer = document.getElementById('headerLogoContainer');
+                    if (logoContainer) {
+                        logoContainer.innerHTML = `<img src="${config.logoUrl}" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-white/40 shadow-sm">`;
+                    }
+                }
+
+                if (config.bgUrl) {
+                    document.body.style.backgroundImage = `url('${config.bgUrl}')`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundAttachment = 'fixed';
+                } else {
+                    document.body.style.backgroundImage = 'none';
+                }
+
+                if (config.primaryColor) {
+                    const primaryColor = config.primaryColor;
+                    document.querySelectorAll('.bg-emerald-700').forEach(el => el.style.backgroundColor = primaryColor);
+                    document.querySelectorAll('.bg-emerald-600').forEach(el => el.style.backgroundColor = primaryColor);
+                    document.querySelectorAll('.text-emerald-800').forEach(el => el.style.color = primaryColor);
+                }
+
+                if (document.getElementById('settingSiteTitle')) {
+                    document.getElementById('settingSiteTitle').value = config.siteTitle || '';
+                    document.getElementById('settingLogoUrl').value = config.logoUrl || '';
+                    document.getElementById('settingBgUrl').value = config.bgUrl || '';
+                    if (config.primaryColor) {
+                        document.getElementById('settingPrimaryColor').value = config.primaryColor;
+                        document.getElementById('settingPrimaryColorText').value = config.primaryColor;
+                    }
+                }
+            });
+        }
+
+        // Lưu cài đặt giao diện lên Firebase (Chỉ Admin)
+        function saveSiteSettings(e) {
+            e.preventDefault();
+            if (currentUser !== ADMIN_USERNAME) return;
+
+            const siteTitle = document.getElementById('settingSiteTitle').value;
+            const logoUrl = document.getElementById('settingLogoUrl').value;
+            const bgUrl = document.getElementById('settingBgUrl').value;
+            const primaryColor = document.getElementById('settingPrimaryColor').value;
+
+            db.ref('settings').set({
+                siteTitle,
+                logoUrl,
+                bgUrl,
+                primaryColor
+            }, (error) => {
+                if (!error) {
+                    alert('Đã lưu và cập nhật giao diện thành công trên toàn hệ thống!');
+                } else {
+                    alert('Lỗi khi lưu cài đặt.');
+                }
+            });
+        }
+
+        function calculateReferenceDate() {
+            const days = parseInt(document.getElementById('refBreedType').value);
+            const hatchVal = document.getElementById('refHatchDate').value;
+            
+            if (!hatchVal) {
+                alert('Vui lòng chọn ngày nở dự kiến!');
+                return;
+            }
+
+            const hatchDate = new Date(hatchVal);
+            const enterDate = new Date(hatchDate);
+            enterDate.setDate(hatchDate.getDate() - days);
+
+            const d = String(enterDate.getDate()).padStart(2, '0');
+            const m = String(enterDate.getMonth() + 1).padStart(2, '0');
+            const y = enterDate.getFullYear();
+
+            const resultBox = document.getElementById('refResultBox');
+            const resultText = document.getElementById('refResultDate');
+            
+            resultText.innerText = `${d}/${m}/${y}`;
+            resultBox.classList.remove('hidden');
+        }
+
+        async function fetchWeather() {
             const weatherText = document.getElementById('weatherText');
+            const weatherLocationName = document.getElementById('weatherLocationName');
+            const weatherForecastDetails = document.getElementById('weatherForecastDetails');
+
             if (!navigator.geolocation) {
                 weatherText.innerText = "Không hỗ trợ định vị";
                 return;
@@ -259,26 +466,68 @@
                 async (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
+                    
                     try {
-                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=vi`);
+                        const geoData = await geoRes.json();
+                        if (geoData && geoData.address) {
+                            const addr = geoData.address;
+                            const cityName = addr.city || addr.town || addr.village || addr.county || "Khu vực của bạn";
+                            const district = addr.suburb || addr.district || "";
+                            weatherLocationName.innerText = district ? `${district}, ${cityName}` : cityName;
+                        } else {
+                            weatherLocationName.innerText = "Vị trí hiện tại";
+                        }
+                    } catch (e) {
+                        weatherLocationName.innerText = "Không xác định được địa chỉ";
+                    }
+
+                    try {
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);
                         const data = await res.json();
                         if (data && data.current_weather) {
                             const temp = data.current_weather.temperature;
                             const wind = data.current_weather.windspeed;
                             weatherText.innerHTML = `<span class="font-bold">${temp}°C</span> (Gió ${wind}km/h)`;
+
+                            if (data.daily && data.daily.time && data.daily.time.length > 2) {
+                                const dates = data.daily.time;
+                                const maxTemps = data.daily.temperature_2m_max;
+                                const minTemps = data.daily.temperature_2m_min;
+
+                                let html = `<div class="font-semibold text-gray-700 mb-2"><i class="fa-solid fa-calendar-days text-emerald-600 mr-1"></i> Dự báo 2 ngày tới:</div>`;
+                                for (let i = 1; i <= 2; i++) {
+                                    const dateParts = dates[i].split('-');
+                                    const formattedDate = `${dateParts[2]}/${dateParts[1]}`;
+                                    html += `
+                                        <div class="flex justify-between items-center bg-emerald-50 px-3 py-2 rounded-xl mb-1.5 border border-emerald-100">
+                                            <span class="font-semibold text-emerald-900">Ngày ${formattedDate}</span>
+                                            <span class="text-gray-700">Thấp: <b class="text-blue-600">${minTemps[i]}°C</b> | Cao: <b class="text-red-600">${maxTemps[i]}°C</b></span>
+                                        </div>
+                                    `;
+                                }
+                                weatherForecastDetails.innerHTML = html;
+                            }
                         } else {
                             weatherText.innerText = "Không lấy được thời tiết";
                         }
                     } catch (e) {
                         weatherText.innerText = "Lỗi tải thời tiết";
+                        weatherForecastDetails.innerHTML = `<p class="text-red-500 text-center py-2">Không thể tải dữ liệu dự báo.</p>`;
                     }
                 },
                 (error) => {
-                    // Mặc định nếu người dùng từ chối cấp quyền vị trí
                     weatherText.innerText = "Chưa cấp quyền vị trí";
+                    weatherLocationName.innerText = "Chưa cấp quyền vị trí";
+                    weatherForecastDetails.innerHTML = `<p class="text-gray-500 text-center py-2">Vui lòng cho phép truy cập định vị trên trình duyệt.</p>`;
                 },
                 { timeout: 10000 }
             );
+        }
+
+        function toggleWeatherDropdown() {
+            const dropdown = document.getElementById('weatherDropdown');
+            dropdown.classList.toggle('hidden');
         }
 
         function initDraggableFloatingButton() {
@@ -415,13 +664,16 @@
                 appContainer.classList.remove('hidden');
                 
                 const addSection = document.getElementById('addOrderSection');
+                const adminSettingsSection = document.getElementById('adminSettingsSection');
                 const tableSection = document.getElementById('tableSection');
                 const thOwner = document.getElementById('thOwner');
                 const floatingNotification = document.getElementById('floatingNotification');
 
                 if (currentUser === ADMIN_USERNAME) {
                     document.getElementById('userWelcome').innerText = `Quản Trị: ${currentUser}`;
-                    addSection.classList.add('hidden');
+                    addSection.closest('.lg\\:col-span-1').classList.remove('hidden');
+                    addSection.classList.add('hidden'); // Ẩn phần thêm đơn của khách
+                    adminSettingsSection.classList.remove('hidden'); // Hiện bảng cài đặt
                     tableSection.classList.remove('lg:col-span-2');
                     tableSection.classList.add('lg:col-span-3');
                     thOwner.classList.remove('hidden');
@@ -429,7 +681,9 @@
                     loadAllOrdersForAdmin();
                 } else {
                     document.getElementById('userWelcome').innerText = `Xin chào: ${currentUser}`;
+                    addSection.closest('.lg\\:col-span-1').classList.remove('hidden');
                     addSection.classList.remove('hidden');
+                    adminSettingsSection.classList.add('hidden'); // Ẩn bảng cài đặt của admin
                     tableSection.classList.remove('lg:col-span-3');
                     tableSection.classList.add('lg:col-span-2');
                     thOwner.classList.add('hidden');
@@ -525,6 +779,7 @@
                 id: orderId,
                 name, phone, breedText, quantity,
                 price: formatMoney(customPrice),
+                deposit: formatMoney(deposit),
                 enterDate: formatDate(enterMachineDate),
                 hatchDate: formatDate(hatchDate),
                 debt: formatMoney(remainingDebt)
@@ -597,37 +852,42 @@
                     row.innerHTML = `
                         <td class="p-3 font-bold text-emerald-700">${order.owner}</td>
                         <td class="p-3">
-                            <div class="font-semibold">${order.name}</div>
-                            <div class="text-xs text-gray-500">${order.phone}</div>
+                            <div class="font-bold text-gray-900">${order.name}</div>
+                            <div class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-phone text-[10px] mr-1"></i>${order.phone}</div>
                         </td>
                         <td class="p-3">
-                            <div>${order.breedText}</div>
-                            <span class="text-xs text-emerald-600 font-semibold">${order.quantity} con</span>
+                            <div class="font-medium">${order.breedText}</div>
+                            <span class="text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">${order.quantity} con</span>
                         </td>
-                        <td class="p-3 text-gray-700">${displayPrice}</td>
+                        <td class="p-3 text-gray-700 font-medium">${displayPrice}</td>
                         <td class="p-3 text-emerald-700 font-medium">${order.enterDate}</td>
                         <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
-                        <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
+                        <td class="p-3 text-amber-600 font-bold">${order.deposit || '0 đ'}</td>
+                        <td class="p-3 text-red-600 font-bold">${order.debt}</td>
                         <td class="p-3 text-center">
-                            <button onclick="deleteOrder('${order.id}', '${order.owner}')" class="text-red-400 hover:text-red-600 p-1" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                            <span class="text-xs text-gray-400 italic">Chỉ xem</span>
                         </td>
                     `;
                 } else {
                     row.innerHTML = `
+                        <td class="p-3 hidden"></td>
                         <td class="p-3">
-                            <div class="font-semibold">${order.name}</div>
-                            <div class="text-xs text-gray-500">${order.phone}</div>
+                            <div class="font-bold text-gray-900">${order.name}</div>
+                            <div class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-phone text-[10px] mr-1"></i>${order.phone}</div>
                         </td>
                         <td class="p-3">
-                            <div>${order.breedText}</div>
-                            <span class="text-xs text-emerald-600 font-semibold">${order.quantity} con</span>
+                            <div class="font-medium">${order.breedText}</div>
+                            <span class="text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">${order.quantity} con</span>
                         </td>
-                        <td class="p-3 text-gray-700">${displayPrice}</td>
+                        <td class="p-3 text-gray-700 font-medium">${displayPrice}</td>
                         <td class="p-3 text-emerald-700 font-medium">${order.enterDate}</td>
                         <td class="p-3 text-emerald-800 font-bold">${order.hatchDate}</td>
-                        <td class="p-3 text-red-600 font-semibold">${order.debt}</td>
+                        <td class="p-3 text-amber-600 font-bold">${order.deposit || '0 đ'}</td>
+                        <td class="p-3 text-red-600 font-bold">${order.debt}</td>
                         <td class="p-3 text-center">
-                            <button onclick="deleteOrder('${order.id}', '${currentUser}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteOrder('${order.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg transition text-xs font-semibold shadow-sm">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Xóa
+                            </button>
                         </td>
                     `;
                 }
@@ -635,43 +895,49 @@
             });
         }
 
+        function deleteOrder(orderId) {
+            if (confirm('Bạn có chắc chắn muốn xóa đơn hàng này không?')) {
+                db.ref('orders/' + currentUser + '/' + orderId).remove();
+            }
+        }
+
         function exportToExcel() {
             if (cachedOrdersForExport.length === 0) {
-                alert('Không có dữ liệu!');
+                alert("Không có dữ liệu để xuất!");
                 return;
             }
-            let csvContent = "\uFEFFChủ Lò,Khách Hàng,Số Điện Thoại,Loại Giống,Số Lượng,Đơn Giá,Ngày Vào Máy,Ngày Nở,Công Nợ\n";
+            let csv = "\uFEFFChủ Lò,Khách Hàng,Số Điện Thoại,Giống,Số Lượng,Đơn Giá,Ngày Vào Máy,Ngày Nở,Tiền Đã Cọc,Công Nợ\n";
             cachedOrdersForExport.forEach(o => {
-                csvContent += `"${o.owner || currentUser}","${o.name}","${o.phone}","${o.breedText}",${o.quantity},"${o.price}","${o.enterDate}","${o.hatchDate}","${o.debt}"\n`;
+                csv += `"${o.owner || currentUser}","${o.name}","${o.phone}","${o.breedText}",${o.quantity},"${o.price}","${o.enterDate}","${o.hatchDate}","${o.deposit || '0 đ'}","${o.debt}"\n`;
             });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `sao-luu-${currentUser}.csv`;
+            a.href = url;
+            a.download = `Danh_Sach_Ap_Trung_${new Date().toISOString().slice(0,10)}.csv`;
             a.click();
         }
 
         function exportToText() {
             if (cachedOrdersForExport.length === 0) {
-                alert('Không có dữ liệu!');
+                alert("Không có dữ liệu để xuất!");
                 return;
             }
-            let textContent = `DANH SÁCH ĐƠN HÀNG - ${currentUser.toUpperCase()}\n\n`;
+            let text = "=== DANH SÁCH QUẢN LÝ LÒ ẤP TRỨNG ===\n\n";
             cachedOrdersForExport.forEach((o, i) => {
-                textContent += `[${i+1}] Khách: ${o.name} - SĐT: ${o.phone} - ${o.breedText}: ${o.quantity} con - Nợ: ${o.debt}\n`;
+                text += `[Đơn ${i+1}] - Chủ lò: ${o.owner || currentUser}\n`;
+                text += `- Khách hàng: ${o.name} (SĐT: ${o.phone})\n`;
+                text += `- Giống: ${o.breedText} | Số lượng: ${o.quantity} con | Đơn giá: ${o.price}\n`;
+                text += `- Ngày vào máy: ${o.enterDate} | Ngày nở: ${o.hatchDate}\n`;
+                text += `- Tiền đã cọc: ${o.deposit || '0 đ'} | Công nợ còn lại: ${o.debt}\n`;
+                text += `----------------------------------------\n`;
             });
-            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `danh-sach-${currentUser}.txt`;
-            a.click();
-        }
-
-        function deleteOrder(id, ownerUser) {
-            if (!currentUser) return;
-            if (confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
-                db.ref('orders/' + ownerUser + '/' + id).remove();
-            }
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const aElem = document.createElement('a');
+            aElem.href = url;
+            aElem.download = `Bao_Cao_Ap_Trung_${new Date().toISOString().slice(0,10)}.txt`;
+            aElem.click();
         }
     </script>
 </body>
