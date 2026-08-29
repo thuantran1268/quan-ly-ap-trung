@@ -146,10 +146,20 @@
 
             <!-- CỘT DANH SÁCH -->
             <section id="tableSection" class="bg-white p-4 sm:p-6 rounded-2xl shadow-md lg:col-span-2 border border-emerald-100 flex flex-col">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                     <h2 id="tableTitle" class="text-base sm:text-lg font-bold text-emerald-800 flex items-center">
                         <i class="fa-solid fa-list-check mr-2"></i> Danh Sách Đơn Hàng & Lịch Trình Ấp
                     </h2>
+                    
+                    <!-- NÚT TẢI SAO LƯU (EXCEL & VĂN BẢN) -->
+                    <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                        <button onclick="exportToExcel()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg transition flex items-center shadow">
+                            <i class="fa-solid fa-file-excel mr-1.5"></i> Tải Excel (CSV)
+                        </button>
+                        <button onclick="exportToText()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg transition flex items-center shadow">
+                            <i class="fa-solid fa-file-lines mr-1.5"></i> Tải File Văn Bản (.txt)
+                        </button>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto flex-grow -mx-4 sm:mx-0 px-4 sm:px-0">
@@ -174,14 +184,13 @@
         </main>
     </div>
 
-    <!-- BONG BÓNG CHAT / ICON THÔNG BÁO NỔI (KÉO DI CHUYỂN KHẮP MÀN HÌNH) -->
+    <!-- BONG BÓNG CHAT THÔNG BÁO NỔI -->
     <div id="floatingNotification" class="fixed bottom-6 right-6 z-[99999] cursor-pointer hidden select-none touch-none">
         <div id="floatingBtn" class="relative bg-emerald-600 hover:bg-emerald-700 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center border-2 border-white transition-transform active:scale-95">
             <i class="fa-solid fa-message text-2xl"></i>
             <span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow hidden">0</span>
         </div>
 
-        <!-- HỘP NỘI DUNG THÔNG BÁO -->
         <div id="notifDropdown" class="hidden absolute bottom-16 right-0 w-72 sm:w-80 bg-white text-gray-800 rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
             <div class="bg-emerald-800 text-white px-4 py-3 font-semibold flex justify-between items-center cursor-default">
                 <span><i class="fa-solid fa-bell mr-1"></i> Lịch Nở Hôm Nay</span>
@@ -197,6 +206,7 @@
         const ADMIN_PASSWORD = "12345678t";
 
         let currentUser = localStorage.getItem('currentUser') || null;
+        let cachedOrdersForExport = []; // Lưu trữ dữ liệu để phục vụ xuất file
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('orderDate').valueAsDate = new Date();
@@ -213,7 +223,6 @@
             });
         });
 
-        // TÍNH NĂNG KÉO THẢ BONG BÓNG TRÊN MÀN HÌNH (MOBILE & PC)
         function initDraggableFloatingButton() {
             const el = document.getElementById('floatingNotification');
             let isDragging = false;
@@ -250,7 +259,6 @@
 
             function dragEnd(e) {
                 if (!isDragging) {
-                    // Nếu không kéo mà chỉ bấm click -> bật/tắt bảng thông báo
                     const dropdown = document.getElementById('notifDropdown');
                     dropdown.classList.toggle('hidden');
                 }
@@ -364,7 +372,7 @@
                     tableSection.classList.remove('lg:col-span-2');
                     tableSection.classList.add('lg:col-span-3');
                     thOwner.classList.remove('hidden');
-                    floatingNotification.classList.add('hidden'); // Admin ẩn bong bóng thông báo
+                    floatingNotification.classList.add('hidden');
                     loadAllOrdersForAdmin();
                 } else {
                     document.getElementById('userWelcome').innerText = `Xin chào: ${currentUser}`;
@@ -372,7 +380,7 @@
                     tableSection.classList.remove('lg:col-span-3');
                     tableSection.classList.add('lg:col-span-2');
                     thOwner.classList.add('hidden');
-                    floatingNotification.classList.remove('hidden'); // Hiện bong bóng thông báo cho khách
+                    floatingNotification.classList.remove('hidden');
                     loadOrdersRealtime();
                 }
             } else {
@@ -499,6 +507,7 @@
                     allOrders = Object.values(data);
                 }
 
+                cachedOrdersForExport = allOrders.map(o => ({ owner: currentUser, ...o }));
                 checkNotifications(allOrders);
 
                 allOrders.forEach((order) => {
@@ -535,6 +544,7 @@
                 tableBody.innerHTML = '';
                 const allUsersData = snapshot.val();
                 let totalOrdersCount = 0;
+                cachedOrdersForExport = [];
 
                 if (allUsersData) {
                     Object.keys(allUsersData).forEach(username => {
@@ -542,6 +552,8 @@
                         if (userOrders) {
                             Object.values(userOrders).forEach(order => {
                                 totalOrdersCount++;
+                                cachedOrdersForExport.push({ owner: username, ...order });
+
                                 const displayPrice = order.price ? order.price : '0 đ';
                                 const row = document.createElement('tr');
                                 row.className = "hover:bg-gray-50";
@@ -573,6 +585,76 @@
                     tableBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-400">Chưa có đơn hàng nào trên hệ thống.</td></tr>`;
                 }
             });
+        }
+
+        // TÍNH NĂNG XUẤT FILE EXCEL (.CSV)
+        function exportToExcel() {
+            if (cachedOrdersForExport.length === 0) {
+                alert('Không có dữ liệu để xuất file!');
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // Hỗ trợ hiển thị tiếng Việt UTF-8 chuẩn trên Excel
+            csvContent += "Chủ Lò,Khách Hàng,Số Điện Thoại,Loại Giống,Số Lượng,Đơn Giá,Ngày Vào Máy,Ngày Nở Dự Kiến,Công Nợ Còn Thiếu\n";
+
+            cachedOrdersForExport.forEach(o => {
+                const row = [
+                    `"${o.owner || currentUser}"`,
+                    `"${o.name}"`,
+                    `"${o.phone}"`,
+                    `"${o.breedText}"`,
+                    o.quantity,
+                    `"${o.price}"`,
+                    `"${o.enterDate}"`,
+                    `"${o.hatchDate}"`,
+                    `"${o.debt}"`
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sao-luu-don-hang-${currentUser}-${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // TÍNH NĂNG XUẤT FILE VĂN BẢN DỄ ĐỌC (.TXT) CHO KHÁCH HÀNG
+        function exportToText() {
+            if (cachedOrdersForExport.length === 0) {
+                alert('Không có dữ liệu để xuất file!');
+                return;
+            }
+
+            let textContent = "========================================\n";
+            textContent += `     DANH SÁCH ĐƠN HÀNG - TÀI KHOẢN: ${currentUser.toUpperCase()}\n`;
+            textContent += `     Ngày xuất file: ${new Date().toLocaleString('vi-VN')}\n`;
+            textContent += "========================================\n\n";
+
+            cachedOrdersForExport.forEach((o, index) => {
+                textContent += `Đơn số [${index + 1}]\n`;
+                if (currentUser === ADMIN_USERNAME) textContent += `- Chủ lò: ${o.owner}\n`;
+                textContent += `- Khách hàng: ${o.name}\n`;
+                textContent += `- Số điện thoại: ${o.phone}\n`;
+                textContent += `- Giống và số lượng: ${o.breedText} - ${o.quantity} con\n`;
+                textContent += `- Đơn giá: ${o.price}\n`;
+                textContent += `- Ngày vào máy: ${o.enterDate}\n`;
+                textContent += `- Ngày nở dự kiến: ${o.hatchDate}\n`;
+                textContent += `- Công nợ còn thiếu: ${o.debt}\n`;
+                textContent += "----------------------------------------\n";
+            });
+
+            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `danh-sach-don-hang-${currentUser}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function deleteOrder(id, ownerUser) {
