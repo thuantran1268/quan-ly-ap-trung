@@ -100,7 +100,13 @@
                 <h1 id="headerTitle" class="text-lg sm:text-xl font-bold text-center sm:text-left">Hệ Thống Quản Lý Lò Ấp Trứng</h1>
             </div>
             
-            <div class="flex items-center space-x-4 text-sm">
+            <div class="flex flex-wrap items-center justify-center sm:justify-end gap-3 text-sm">
+                <!-- WIDGET THỜI TIẾT TỰ ĐỘNG -->
+                <div id="weatherWidget" class="bg-emerald-800/80 px-3 py-1.5 rounded-lg flex items-center space-x-2 border border-emerald-600 text-emerald-100">
+                    <i class="fa-solid fa-cloud-sun text-yellow-300"></i>
+                    <span id="weatherText">Đang tải thời tiết...</span>
+                </div>
+
                 <span id="userWelcome" class="text-emerald-200 font-medium"></span>
                 <button onclick="handleLogout()" class="bg-emerald-800 hover:bg-emerald-900 px-3 py-1.5 rounded-lg transition">
                     <i class="fa-solid fa-right-from-bracket mr-1"></i> Đăng xuất
@@ -230,6 +236,7 @@
             updateDefaultPrice();
             checkAuthState();
             initDraggableFloatingButton();
+            fetchWeather();
 
             window.addEventListener('click', function(e) {
                 const dropdown = document.getElementById('notifDropdown');
@@ -239,6 +246,40 @@
                 }
             });
         });
+
+        // HÀM LẤY THỜI TIẾT TỰ ĐỘNG THEO VỊ TRÍ
+        function fetchWeather() {
+            const weatherText = document.getElementById('weatherText');
+            if (!navigator.geolocation) {
+                weatherText.innerText = "Không hỗ trợ định vị";
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    try {
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                        const data = await res.json();
+                        if (data && data.current_weather) {
+                            const temp = data.current_weather.temperature;
+                            const wind = data.current_weather.windspeed;
+                            weatherText.innerHTML = `<span class="font-bold">${temp}°C</span> (Gió ${wind}km/h)`;
+                        } else {
+                            weatherText.innerText = "Không lấy được thời tiết";
+                        }
+                    } catch (e) {
+                        weatherText.innerText = "Lỗi tải thời tiết";
+                    }
+                },
+                (error) => {
+                    // Mặc định nếu người dùng từ chối cấp quyền vị trí
+                    weatherText.innerText = "Chưa cấp quyền vị trí";
+                },
+                { timeout: 10000 }
+            );
+        }
 
         function initDraggableFloatingButton() {
             const el = document.getElementById('floatingNotification');
@@ -379,7 +420,7 @@
                 const floatingNotification = document.getElementById('floatingNotification');
 
                 if (currentUser === ADMIN_USERNAME) {
-                    document.getElementById('userWelcome').innerText = `Quản Trị Viên: ${currentUser}`;
+                    document.getElementById('userWelcome').innerText = `Quản Trị: ${currentUser}`;
                     addSection.classList.add('hidden');
                     tableSection.classList.remove('lg:col-span-2');
                     tableSection.classList.add('lg:col-span-3');
