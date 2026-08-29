@@ -285,6 +285,7 @@
                                 <th class="p-3">Đơn Giá</th>
                                 <th class="p-3">Cho Vào Máy</th>
                                 <th class="p-3">Ngày Nở Dự Kiến</th>
+                                <th class="p-3 text-amber-600">Tiền Đã Cọc</th>
                                 <th class="p-3">Công Nợ</th>
                                 <th class="p-3 text-center">Thao tác</th>
                             </tr>
@@ -838,7 +839,7 @@
             });
 
             if (filteredOrders.length === 0) {
-                const colSpan = (currentUser === ADMIN_USERNAME) ? 8 : 7;
+                const colSpan = (currentUser === ADMIN_USERNAME) ? 9 : 8;
                 tableBody.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-gray-400">Không tìm thấy dữ liệu phù hợp.</td></tr>`;
                 return;
             }
