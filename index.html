@@ -1,1525 +1,387 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="h-full bg-slate-50">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Hệ Thống Quản Lý Lò Ấp Trứng Multi-Role</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Firebase SDK (v9+ Compat Mode) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
-.bottom-nav {
-  display: none; /* Mặc định ẩn trên máy tính */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background-color: #ffffff;
-  border-top: 1px solid #e5e7eb;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  z-index: 999999 !important; /* Nổi lên trên cùng */
-  pointer-events: auto !important; /* Nhận thao tác bấm */
-  justify-content: space-around;
-  align-items: center;
-}
-
-.bottom-nav-item {
-  cursor: pointer !important;
-  -webkit-tap-highlight-color: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #6b7280;
-  text-decoration: none;
-  font-size: 11px;
-  font-family: sans-serif;
-  flex: 1;
-  height: 100%;
-}
-  }
-.bottom-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #6b7280;
-  text-decoration: none;
-  font-size: 11px;
-  font-family: sans-serif;
-  flex: 1;
-  height: 100%;
-}
-
-  .bottom-nav-item.active {
-    color: #059669;
-    font-weight: bold;
-  }
-
-  .bottom-nav-item svg {
-    width: 22px;
-    height: 22px;
-    margin-bottom: 2px;
-  }
-
-  /* Khi xem trên điện thoại (màn hình nhỏ dưới 768px) */
-  @media (max-width: 768px) {
-    /* Hiển thị thanh menu dưới */
-    .bottom-nav {
-      display: flex !important;
-    }
-
-    /* Đẩy phần nội dung lên một chút để không bị thanh dưới che mất */
-    body {
-      padding-bottom: 66px !important;
-    }
-
-    /* 1. Ẩn hoàn toàn sidebar */
-    .sidebar, [class*="sidebar"], .drawer, aside {
-      display: none !important;
-    }
-
-    /* 2. ÉP NỘI DUNG CHÍNH CĂN ĐỀU LẤP ĐẦY MÀN HÌNH (Sửa khoảng trắng bên trái) */
-    .main-area, #app-shell, main, .content {
-      margin-left: 0 !important;
-      padding-left: 12px !important;
-      padding-right: 12px !important;
-      width: 100% !important;
-      max-width: 100vw !important;
-    }
-  }
-</style>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Quản Lý Lò Ấp">
-<meta name="theme-color" content="#087f5b">
-<title>Quản Lý Lò Ấp Trứng</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<style>
-    * { box-sizing: border-box; }
-    html, body { margin:0; min-height:100%; }
-    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    .app-shell { min-height:100vh; }
-    .sidebar { width:255px; }
-    .main-area { min-width:0; }
-    .nav-item { transition:.18s ease; }
-    .nav-item.active { background:#e7f7f0; color:#087f5b; font-weight:700; }
-    .nav-item:hover:not(.active) { background:#f4faf7; }
-    .stat-card { transition:transform .18s ease, box-shadow .18s ease; }
-    .stat-card:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.08); }
-    .card { background:#fff; border:1px solid #e5eee9; border-radius:18px; box-shadow:0 5px 20px rgba(20,70,50,.055); }
-    .modal-backdrop { background:rgba(8,28,20,.48); backdrop-filter:blur(3px); }
-    .table-wrap { overflow-x:auto; }
-    .mobile-bottom { display:none; }
-    .toast { animation:toastIn .22s ease-out; }
-    @keyframes toastIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-    .fade-in { animation:fadeIn .2s ease-out; }
-    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
-    .pulse-dot { animation:pulseDot 1.7s infinite; }
-    @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:.35} }
-    input, select { outline:none; }
-    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-    @media (max-width: 900px) {
-        .sidebar { display:none; }
-        .mobile-bottom { display:flex; }
-        .desktop-only { display:none !important; }
-        .main-content { padding-bottom:88px; }
-    }
-    @media (min-width: 901px) {
-        .mobile-only { display:none !important; }
-    }
-    @media (max-width: 640px) {
-        .card { border-radius:15px; }
-        .page-pad { padding-left:12px; padding-right:12px; }
-        .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    }
-</style>
-
-<script>
-tailwind.config = {
-    theme: {
-        extend: {
-            colors: {
-                brand: {
-                    50:'#edf9f4', 100:'#d7f2e7', 200:'#afe5cf',
-                    300:'#7bd4b3', 400:'#46bd94', 500:'#18a77a',
-                    600:'#0b9067', 700:'#087f5b', 800:'#06664a', 900:'#064f3b'
-                }
-            }
-        }
-    }
-};
-</script>
+        .pt-safe { padding-top: env(safe-area-inset-top, 16px); }
+        .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 76px); }
+        .bottom-safe { bottom: env(safe-area-inset-bottom, 0px); }
+        * { -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
+<body class="h-full text-slate-800 flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-white">
 
-<body class="bg-[#f3f8f5] text-slate-800">
-<div id="toastContainer" class="fixed top-4 right-4 z-[10000] space-y-2 w-[min(380px,calc(100vw-32px))]"></div>
-
-<!-- LOGIN -->
-<div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-brand-50 via-white to-emerald-50">
-    <div class="w-full max-w-md">
-        <div class="text-center mb-6">
-            <div id="loginLogo" class="mx-auto w-16 h-16 rounded-2xl bg-brand-700 text-white flex items-center justify-center shadow-lg">
-                <i class="fa-solid fa-egg text-3xl"></i>
-            </div>
-            <h1 id="loginTitle" class="text-2xl font-black text-brand-800 mt-4">Quản Lý Lò Ấp Trứng</h1>
-            <p class="text-sm text-slate-500 mt-1">Quản lý đơn ấp, lịch nở và công nợ trên mọi thiết bị</p>
-        </div>
-        <div class="card p-5 sm:p-7">
-            <div class="flex border-b border-slate-200 mb-6">
-                <button id="loginTab" onclick="switchAuthTab('login')" class="flex-1 pb-3 text-brand-700 font-bold border-b-2 border-brand-600">Đăng nhập</button>
-                <button id="registerTab" onclick="switchAuthTab('register')" class="flex-1 pb-3 text-slate-400 font-semibold">Đăng ký</button>
+    <!-- ==================== AUTH SECTION (ĐĂNG NHẬP / ĐĂNG KÝ KHÁCH HÀNG) ==================== -->
+    <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-100 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl border border-slate-100 space-y-5">
+            <div class="text-center space-y-1">
+                <div class="w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold shadow-lg shadow-emerald-600/30">
+                    <i class="fa-solid fa-egg"></i>
+                </div>
+                <h2 id="auth-title" class="text-xl font-black text-slate-800 pt-2">Đăng Nhập System</h2>
+                <p class="text-xs text-slate-500">Quản lý hệ thống lò ấp trứng thông minh</p>
             </div>
 
-            <form id="loginForm" onsubmit="handleLoginSubmit(event)">
-    <!-- 1. Ô nhập Tên tài khoản -->
-    <div>
-        <label class="text-sm font-semibold text-slate-...">Tên tài khoản</label>
-        <input id="loginUsername" required autocomplete="...">
-    </div>
-
-    <!-- 2. Ô nhập Mật khẩu -->
-    <div>
-        <label class="text-sm font-semibold text-slate-...">Mật khẩu</label>
-        <input id="loginPassword" type="password" required>
-    </div>
-
-    <!-- 3. Chèn ô Ghi nhớ tài khoản VÀO ĐÂY (Sau Mật khẩu, Trước nút Đăng nhập) -->
-    <div style="display: flex; align-items: center; margin-top: 8px; margin-bottom: 12px; font-size: 13px;">
-        <input type="checkbox" id="rememberMe" style="margin-right: 6px; width: 16px; height: 16px; cursor: pointer;">
-        <label for="rememberMe" style="cursor: pointer;">Ghi nhớ tài khoản trên thiết bị này</label>
-    </div>
-
-    <!-- 4. Nút Đăng nhập -->
-    <button type="submit" class="w-full bg-brand-700 ...">
-        <i class="fa-solid fa-right-to-bracket mr-2"></i>Đăng nhập
-    </button>
-</form>
-
-            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4 hidden">
-                <div>
-                    <label class="text-sm font-semibold text-slate-600">Tên tài khoản mới</label>
-                    <input id="regUsername" required class="mt-1.5 w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-300" placeholder="Ví dụ: loap01">
+            <!-- Form Đăng Nhập / Đăng Ký Khách Hàng -->
+            <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-3.5">
+                <div id="field-fullname" class="hidden">
+                    <label class="text-[11px] font-bold text-slate-500 block mb-1">HỌ VÀ TÊN</label>
+                    <input type="text" id="fullname" placeholder="Nguyễn Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
+
                 <div>
-                    <label class="text-sm font-semibold text-slate-600">Mật khẩu</label>
-                    <input id="regPassword" type="password" minlength="4" required class="mt-1.5 w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-300" placeholder="Tối thiểu 4 ký tự">
+                    <label class="text-[11px] font-bold text-slate-500 block mb-1">EMAIL TÀI KHOẢN</label>
+                    <input type="email" id="email" required placeholder="diachi@gmail.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
-                <button class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-3 rounded-xl transition">
-                    <i class="fa-solid fa-user-plus mr-2"></i>Tạo tài khoản
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500 block mb-1">MẬT KHẨU</label>
+                    <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <!-- Ghi nhớ tài khoản -->
+                <div id="remember-box" class="flex items-center justify-between text-xs pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-600">
+                        <input type="checkbox" id="remember-me" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                        <span>Ghi nhớ tài khoản</span>
+                    </label>
+                </div>
+
+                <button type="submit" id="btn-submit" class="w-full py-3 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 active:scale-95 transition">
+                    ĐĂNG NHẬP
                 </button>
             </form>
 
-            <div class="mt-5 text-xs text-slate-400 bg-slate-50 rounded-xl p-3">
-                <i class="fa-solid fa-cloud mr-1"></i> Dữ liệu được đồng bộ qua Firebase.
+            <div class="text-center pt-2 border-t border-slate-100">
+                <button type="button" onclick="toggleAuthMode()" id="btn-toggle-mode" class="text-xs font-semibold text-emerald-600">
+                    Chưa có tài khoản? Đăng ký ngay
+                </button>
             </div>
         </div>
     </div>
-</div>
 
-<!-- APP -->
-<div id="appScreen" class="hidden app-shell">
-    <div class="flex min-h-screen">
-        <!-- SIDEBAR -->
-        <aside class="sidebar fixed left-0 top-0 bottom-0 bg-white border-r border-slate-200 z-40 flex flex-col">
-            <div class="p-5 border-b border-slate-100">
-                <div class="flex items-center gap-3">
-                    <div id="sideLogo" class="w-11 h-11 rounded-xl bg-brand-700 text-white flex items-center justify-center">
-                        <i class="fa-solid fa-egg text-xl"></i>
+    <!-- ==================== MAIN DASHBOARD (GIAO DIỆN CHÍNH) ==================== -->
+    <div id="app-screen" class="hidden h-full flex flex-col">
+        <!-- HEADER SYSTEM -->
+        <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 pt-safe px-4 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-600/20">
+                        <i class="fa-solid fa-egg"></i>
                     </div>
-                    <div class="min-w-0">
-                        <div id="sideTitle" class="font-black text-brand-800 leading-tight truncate">Quản Lý Lò Ấp</div>
-                        <div class="text-[11px] text-slate-400">Dashboard</div>
+                    <div>
+                        <h1 class="font-extrabold text-base text-slate-900 leading-tight">Lò Ấp Trứng</h1>
+                        <p class="text-[10px] font-medium text-emerald-600 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Firebase Live
+                        </p>
                     </div>
                 </div>
-            </div>
 
-            <nav class="p-3 space-y-1 flex-1">
-                <button onclick="showView('dashboard')" data-view="dashboard" class="nav-item active w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-sm">
-                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>Tổng quan
-                </button>
-                <button onclick="showView('orders')" data-view="orders" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-sm text-slate-600">
-                    <i class="fa-solid fa-clipboard-list w-5 text-center"></i>Đơn hàng
-                </button>
-                <button onclick="showView('calendar')" data-view="calendar" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-sm text-slate-600">
-                    <i class="fa-solid fa-calendar-days w-5 text-center"></i>Lịch nở
-                </button>
-                <button onclick="showView('debt')" data-view="debt" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-sm text-slate-600">
-                    <i class="fa-solid fa-money-bill-wave w-5 text-center"></i>Công nợ
-                </button>
-                <button id="adminUsersNav" onclick="showView('users')" data-view="users" class="nav-item hidden w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-sm text-slate-600">
-                    <i class="fa-solid fa-users-gear w-5 text-center"></i>Tài khoản & khách hàng
-                </button>
-                <button onclick="showView('export')" data-view="export" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-sm text-slate-600">
-                    <i class="fa-solid fa-file-export w-5 text-center"></i>Xuất dữ liệu
-                </button>
-                <button id="settingsNav" onclick="showView('settings')" data-view="settings" class="nav-item hidden w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-sm text-slate-600">
-                    <i class="fa-solid fa-sliders w-5 text-center"></i>Cài đặt
-                </button>
-            </nav>
-
-            <div class="p-3 border-t border-slate-100">
-                <div class="bg-brand-50 rounded-xl p-3 mb-2">
-                    <div class="text-[11px] text-slate-400">Đang đăng nhập</div>
-                    <div id="sideUser" class="font-bold text-brand-800 truncate">-</div>
-                </div>
-                <button onclick="handleLogout()" class="w-full px-4 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50 font-semibold text-left">
-                    <i class="fa-solid fa-right-from-bracket w-5"></i>Đăng xuất
-                </button>
-            </div>
-        </aside>
-
-        <!-- MAIN -->
-        <div class="main-area flex-1 ml-[255px]">
-            <header class="h-[68px] bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6">
-                <div class="min-w-0">
-                    <div id="pageTitle" class="font-black text-lg text-slate-800">Tổng quan</div>
-                    <div id="pageSubtitle" class="text-xs text-slate-400 hidden sm:block">Theo dõi tình hình lò ấp</div>
-                </div>
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <button onclick="openWeatherModal()" class="hidden sm:flex items-center gap-2 bg-brand-50 text-brand-800 px-3 py-2 rounded-xl text-xs font-semibold">
-                        <i class="fa-solid fa-cloud-sun text-amber-500"></i><span id="weatherText">Đang tải...</span>
+                <!-- Profile, Thông báo & Đăng xuất -->
+                <div class="flex items-center gap-2">
+                    <div id="user-display-name" class="text-right pr-1">
+                        <span class="block text-xs font-bold text-slate-800" id="user-name">User</span>
+                        <span class="block text-[9px] text-emerald-600 font-semibold uppercase" id="user-role-badge">Role</span>
+                    </div>
+                    <button onclick="logoutUser()" title="Đăng xuất" class="w-9 h-9 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center active:scale-95 transition">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
                     </button>
-                    <button onclick="showView('calendar')" class="relative w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-600">
-                        <i class="fa-solid fa-bell"></i>
-                        <span id="headerNotifBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold min-w-5 h-5 rounded-full flex items-center justify-center">0</span>
-                    </button>
-                    <div class="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-200">
-                        <div id="headerAvatar" class="w-9 h-9 rounded-full bg-brand-100 text-brand-800 flex items-center justify-center font-black text-sm">U</div>
-                        <div class="leading-tight">
-                            <div id="headerUser" class="text-sm font-bold">-</div>
-                            <div id="headerRole" class="text-[10px] text-slate-400">Tài khoản</div>
-                        </div>
+                </div>
+            </div>
+
+            <!-- Thanh Selector Switch Role dành riêng cho ADMIN -->
+            <div id="admin-role-switcher" class="hidden bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                <button onclick="switchRole('admin')" id="tab-admin" class="flex-1 py-1.5 rounded-lg text-center bg-white text-emerald-700 shadow-sm transition">
+                    <i class="fa-solid fa-user-shield mr-1"></i> Admin
+                </button>
+                <button onclick="switchRole('owner')" id="tab-owner" class="flex-1 py-1.5 rounded-lg text-center text-slate-500 hover:text-slate-800 transition">
+                    <i class="fa-solid fa-warehouse mr-1"></i> Chủ Lò
+                </button>
+                <button onclick="switchRole('customer')" id="tab-customer" class="flex-1 py-1.5 rounded-lg text-center text-slate-500 hover:text-slate-800 transition">
+                    <i class="fa-solid fa-user mr-1"></i> Khách Hàng
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main class="flex-1 overflow-y-auto px-4 py-4 pb-safe space-y-4">
+
+            <!-- 1. VIEW ADMIN -->
+            <div id="view-admin" class="space-y-4 hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Bảng Điều Khiển Admin</span>
+                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded">Full Rights</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-[10px] text-slate-400 font-semibold uppercase">Tổng Chủ Lò</span>
+                        <div class="text-xl font-black text-slate-800 mt-1">12 Lò ấp</div>
+                        <span class="text-[10px] text-emerald-600 font-medium">100% Hoạt động</span>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-[10px] text-slate-400 font-semibold uppercase">Tài Khoản Khách</span>
+                        <div class="text-xl font-black text-slate-800 mt-1">485 User</div>
+                        <span class="text-[10px] text-emerald-600 font-medium">+24 tuần này</span>
                     </div>
                 </div>
-            </header>
 
-            <main class="main-content p-3 sm:p-5 lg:p-6 page-pad">
-                <!-- DASHBOARD -->
-                <section id="view-dashboard" class="view-section fade-in">
-                    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-3 mb-5">
-                        <div>
-                            <h2 class="text-xl sm:text-2xl font-black text-slate-800">Xin chào, <span id="dashGreeting">bạn</span> 👋</h2>
-                            <p class="text-sm text-slate-500 mt-1">Đây là tình hình lò ấp của bạn hôm nay.</p>
-                        </div>
-                        <button onclick="openOrderModal()" class="bg-brand-700 hover:bg-brand-800 text-white px-4 py-3 rounded-xl font-bold shadow-sm">
-                            <i class="fa-solid fa-plus mr-2"></i>Tạo đơn mới
+                <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-3">
+                    <h3 class="font-bold text-xs text-slate-700 uppercase tracking-wider">Quản trị hệ thống Firebase</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 text-slate-700 text-xs font-semibold active:bg-slate-100">
+                            <i class="fa-solid fa-users-gear text-emerald-600"></i> Quản lý Tài khoản
+                        </button>
+                        <button class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 text-slate-700 text-xs font-semibold active:bg-slate-100">
+                            <i class="fa-solid fa-sliders text-emerald-600"></i> Cấu hình Máy ấp
                         </button>
                     </div>
-
-                    <div class="grid stat-grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-5">
-                        <div class="card stat-card p-4">
-                            <div class="flex justify-between items-start">
-                                <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center"><i class="fa-solid fa-clipboard-list"></i></div>
-                                <span class="text-[10px] text-slate-400">TỔNG</span>
-                            </div>
-                            <div id="statOrders" class="text-2xl font-black mt-4">0</div>
-                            <div class="text-xs text-slate-500">Đơn hàng</div>
-                        </div>
-                        <div class="card stat-card p-4">
-                            <div class="flex justify-between items-start">
-                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-egg"></i></div>
-                                <span class="text-[10px] text-slate-400">ĐANG ẤP</span>
-                            </div>
-                            <div id="statIncubating" class="text-2xl font-black mt-4">0</div>
-                            <div class="text-xs text-slate-500">Đơn chưa đến ngày nở</div>
-                        </div>
-                        <div class="card stat-card p-4">
-                            <div class="flex justify-between items-start">
-                                <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center"><i class="fa-solid fa-calendar-check"></i></div>
-                                <span class="text-[10px] text-slate-400">SẮP NỞ</span>
-                            </div>
-                            <div id="statDue" class="text-2xl font-black mt-4">0</div>
-                            <div class="text-xs text-slate-500">Trong 3 ngày tới</div>
-                        </div>
-                        <div class="card stat-card p-4">
-                            <div class="flex justify-between items-start">
-                                <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center"><i class="fa-solid fa-money-bill-transfer"></i></div>
-                                <span class="text-[10px] text-slate-400">CÔNG NỢ</span>
-                            </div>
-                            <div id="statDebt" class="text-xl sm:text-2xl font-black mt-4 text-red-600">0 đ</div>
-                            <div class="text-xs text-slate-500">Tổng còn phải thu</div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
-                        <div class="card xl:col-span-2 overflow-hidden">
-                            <div class="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center">
-                                <div>
-                                    <h3 class="font-black text-slate-800">Đơn hàng đang ấp</h3>
-                                    <p class="text-xs text-slate-400 mt-0.5">Các đơn chưa đến ngày nở</p>
-                                </div>
-                                <button onclick="showView('orders')" class="text-xs font-bold text-brand-700">Xem tất cả →</button>
-                            </div>
-                            <div id="dashboardOrders" class="divide-y divide-slate-100"></div>
-                        </div>
-
-                        <div class="card overflow-hidden">
-                            <div class="p-4 sm:p-5 border-b border-slate-100">
-                                <h3 class="font-black text-slate-800">Lịch nở sắp tới</h3>
-                                <p class="text-xs text-slate-400 mt-0.5">Ưu tiên xử lý các đơn màu đỏ</p>
-                            </div>
-                            <div id="dashboardCalendar" class="p-3"></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ORDERS -->
-                <section id="view-orders" class="view-section hidden fade-in">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
-                        <div>
-                            <h2 class="text-xl sm:text-2xl font-black">Đơn hàng</h2>
-                            <p id="ordersCountText" class="text-sm text-slate-500 mt-1">0 đơn</p>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="openOrderModal()" class="bg-brand-700 hover:bg-brand-800 text-white px-4 py-2.5 rounded-xl font-bold text-sm">
-                                <i class="fa-solid fa-plus mr-1"></i>Thêm đơn
-                            </button>
-                            <button onclick="exportCSV()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-xl font-semibold text-sm"><i class="fa-solid fa-file-excel mr-1"></i>Excel</button>
-                        </div>
-                    </div>
-
-                    <div class="card p-3 sm:p-4 mb-4">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
-                            <div class="md:col-span-2 relative">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input id="orderSearch" oninput="renderOrders()" class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm" placeholder="Tìm tên khách, SĐT, tài khoản...">
-                            </div>
-                            <select id="orderBreedFilter" onchange="renderOrders()" class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm bg-white">
-                                <option value="">Tất cả giống</option>
-                                <option value="Gà">Gà</option>
-                                <option value="Vịt">Vịt</option>
-                                <option value="Ngan">Ngan</option>
-                            </select>
-                            <select id="orderDebtFilter" onchange="renderOrders()" class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm bg-white">
-                                <option value="">Tất cả công nợ</option>
-                                <option value="debt">Còn công nợ</option>
-                                <option value="paid">Đã thanh toán</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="ordersDesktop" class="card overflow-hidden">
-                        <div class="table-wrap">
-                            <table class="w-full text-left min-w-[1050px]">
-                                <thead class="bg-brand-50 text-brand-900 text-xs uppercase">
-                                    <tr>
-                                        <th id="ownerHead" class="px-4 py-3 hidden">Tài khoản</th>
-                                        <th class="px-4 py-3">Khách hàng</th>
-                                        <th class="px-4 py-3">Giống & SL</th>
-                                        <th class="px-4 py-3">Đơn giá</th>
-                                        <th class="px-4 py-3">Cho vào máy</th>
-                                        <th class="px-4 py-3">Ngày nở dự kiến</th>
-                                        <th class="px-4 py-3">Tiền đã cọc</th>
-                                        <th class="px-4 py-3">Công nợ</th>
-                                        <th class="px-4 py-3 text-center">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="ordersTableBody" class="text-sm divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div id="ordersMobile" class="space-y-3"></div>
-                </section>
-
-                <!-- CALENDAR -->
-                <section id="view-calendar" class="view-section hidden fade-in">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
-                        <div>
-                            <h2 class="text-xl sm:text-2xl font-black">Lịch nở</h2>
-                            <p class="text-sm text-slate-500 mt-1">Theo dõi các đơn nở hôm nay và những ngày sắp tới.</p>
-                        </div>
-                        <button onclick="openReferenceModal()" class="border border-brand-200 text-brand-800 bg-white px-4 py-2.5 rounded-xl font-bold text-sm">
-                            <i class="fa-solid fa-calculator mr-1"></i>Tính ngày vào trứng
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
-                        <div class="card xl:col-span-2 overflow-hidden">
-                            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-black">Lịch nở 14 ngày</h3>
-                                    <p class="text-xs text-slate-400">Từ hôm nay</p>
-                                </div>
-                                <span id="calendarDueBadge" class="text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-full font-bold">0 đơn</span>
-                            </div>
-                            <div id="calendarList" class="divide-y divide-slate-100"></div>
-                        </div>
-                        <div class="card p-4 sm:p-5">
-                            <h3 class="font-black mb-4">Tra cứu nhanh</h3>
-                            <div class="space-y-3">
-                                <label class="text-xs font-semibold text-slate-500">Loại giống</label>
-                                <select id="refBreed" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white">
-                                    <option value="21">Gà - 21 ngày</option>
-                                    <option value="28">Vịt - 28 ngày</option>
-                                    <option value="31">Ngan - 31 ngày</option>
-                                </select>
-                                <label class="text-xs font-semibold text-slate-500">Ngày dự kiến nở</label>
-                                <input id="refDate" type="date" class="w-full border border-slate-200 rounded-xl px-3 py-2.5">
-                                <button onclick="calculateReference()" class="w-full bg-brand-700 text-white font-bold py-2.5 rounded-xl">Tính ngày vào máy</button>
-                                <div id="refResult" class="hidden bg-brand-50 border border-brand-100 rounded-xl p-4 text-center">
-                                    <div class="text-xs text-slate-500">Ngày cần cho trứng vào máy</div>
-                                    <div id="refResultDate" class="text-xl font-black text-brand-800 mt-1">--/--/----</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- DEBT -->
-                <section id="view-debt" class="view-section hidden fade-in">
-                    <div class="mb-5">
-                        <h2 class="text-xl sm:text-2xl font-black">Công nợ</h2>
-                        <p class="text-sm text-slate-500 mt-1">Theo dõi tiền đã cọc và số tiền còn phải thu.</p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-                        <div class="card p-4"><div class="text-xs text-slate-400">TỔNG GIÁ TRỊ ĐƠN</div><div id="debtTotal" class="text-xl font-black mt-2">0 đ</div></div>
-                        <div class="card p-4"><div class="text-xs text-slate-400">ĐÃ THU TIỀN CỌC</div><div id="debtDeposit" class="text-xl font-black mt-2 text-brand-700">0 đ</div></div>
-                        <div class="card p-4"><div class="text-xs text-slate-400">CÒN PHẢI THU</div><div id="debtRemain" class="text-xl font-black mt-2 text-red-600">0 đ</div></div>
-                    </div>
-                    <div class="card overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 justify-between">
-                            <h3 class="font-black">Danh sách khách còn công nợ</h3>
-                            <input id="debtSearch" oninput="renderDebt()" class="border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Tìm tên khách, SĐT, tài khoản...">
-                        </div>
-                        <div id="debtList" class="divide-y divide-slate-100"></div>
-                    </div>
-                </section>
-
-                <!-- ADMIN USERS -->
-                <section id="view-users" class="view-section hidden fade-in">
-                    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-3 mb-5">
-                        <div>
-                            <h2 class="text-xl sm:text-2xl font-black">Tài khoản & khách hàng</h2>
-                            <p class="text-sm text-slate-500 mt-1">Admin quản lý toàn bộ tài khoản và toàn bộ đơn hàng của từng tài khoản.</p>
-                        </div>
-                        <button onclick="openUserModal()" class="bg-brand-700 hover:bg-brand-800 text-white px-4 py-2.5 rounded-xl font-bold text-sm">
-                            <i class="fa-solid fa-user-plus mr-1"></i>Thêm tài khoản
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-                        <div class="card p-4"><div class="text-xs text-slate-400">TÀI KHOẢN</div><div id="adminUserCount" class="text-2xl font-black mt-2">0</div></div>
-                        <div class="card p-4"><div class="text-xs text-slate-400">KHÁCH HÀNG</div><div id="adminCustomerCount" class="text-2xl font-black mt-2">0</div></div>
-                        <div class="card p-4"><div class="text-xs text-slate-400">TỔNG CÔNG NỢ</div><div id="adminDebtCount" class="text-xl font-black mt-2 text-red-600">0 đ</div></div>
-                    </div>
-
-                    <div class="card overflow-hidden mb-5">
-                        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 class="font-black">Danh sách tài khoản</h3>
-                            <input id="userSearch" oninput="renderAdminUsers()" class="border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Tìm tài khoản...">
-                        </div>
-                        <div class="table-wrap">
-                            <table class="w-full min-w-[760px] text-left">
-                                <thead class="bg-brand-50 text-brand-900 text-xs uppercase">
-                                    <tr><th class="px-4 py-3">Tài khoản</th><th class="px-4 py-3">Số đơn</th><th class="px-4 py-3">Khách hàng</th><th class="px-4 py-3">Công nợ</th><th class="px-4 py-3">Thao tác</th></tr>
-                                </thead>
-                                <tbody id="adminUsersBody" class="divide-y divide-slate-100 text-sm"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="card overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div>
-                                <h3 class="font-black">Toàn bộ khách hàng</h3>
-                                <p class="text-xs text-slate-400">Admin có thể lọc theo tài khoản và xem từng đơn.</p>
-                            </div>
-                            <select id="adminOwnerFilter" onchange="renderAdminCustomers()" class="border border-slate-200 rounded-xl px-3 py-2 text-sm bg-white">
-                                <option value="">Tất cả tài khoản</option>
-                            </select>
-                        </div>
-                        <div id="adminCustomersList" class="divide-y divide-slate-100"></div>
-                    </div>
-                </section>
-
-                <!-- EXPORT -->
-                <section id="view-export" class="view-section hidden fade-in">
-                    <div class="mb-5">
-                        <h2 class="text-xl sm:text-2xl font-black">Xuất dữ liệu</h2>
-                        <p class="text-sm text-slate-500 mt-1">Tải danh sách hiện tại thành CSV để mở bằng Excel hoặc lưu báo cáo TXT.</p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
-                        <button onclick="exportCSV()" class="card p-6 text-left hover:border-blue-300 transition">
-                            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-file-excel text-xl"></i></div>
-                            <h3 class="font-black mt-4">Xuất Excel / CSV</h3>
-                            <p class="text-sm text-slate-500 mt-1">Có tài khoản, khách hàng, giống, ngày, tiền cọc và công nợ.</p>
-                        </button>
-                        <button onclick="exportTXT()" class="card p-6 text-left hover:border-amber-300 transition">
-                            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-file-lines text-xl"></i></div>
-                            <h3 class="font-black mt-4">Xuất báo cáo TXT</h3>
-                            <p class="text-sm text-slate-500 mt-1">Bản báo cáo dễ lưu trữ hoặc gửi cho người khác.</p>
-                        </button>
-                    </div>
-                </section>
-
-                <!-- SETTINGS -->
-                <section id="view-settings" class="view-section hidden fade-in">
-                    <div class="mb-5">
-                        <h2 class="text-xl sm:text-2xl font-black">Cài đặt hệ thống</h2>
-                        <p class="text-sm text-slate-500 mt-1">Chỉ Admin mới có quyền thay đổi.</p>
-                    </div>
-                    <div class="card p-5 max-w-2xl">
-                        <form onsubmit="saveSettings(event)" class="space-y-4">
-                            <div><label class="text-sm font-semibold text-slate-600">Tên website</label><input id="settingTitle" class="mt-1.5 w-full border border-slate-200 rounded-xl px-3 py-2.5"></div>
-                            <div><label class="text-sm font-semibold text-slate-600">URL logo</label><input id="settingLogo" type="url" class="mt-1.5 w-full border border-slate-200 rounded-xl px-3 py-2.5" placeholder="https://..."></div>
-                            <div><label class="text-sm font-semibold text-slate-600">URL hình nền</label><input id="settingBg" type="url" class="mt-1.5 w-full border border-slate-200 rounded-xl px-3 py-2.5" placeholder="https://..."></div>
-                            <div><label class="text-sm font-semibold text-slate-600">Màu chủ đạo</label><div class="flex gap-2 mt-1.5"><input id="settingColor" type="color" value="#087f5b" class="w-14 h-11 border rounded-xl"><input id="settingColorText" class="flex-1 border border-slate-200 rounded-xl px-3" value="#087F5B"></div></div>
-                            <button class="bg-brand-700 text-white font-bold px-5 py-3 rounded-xl">Lưu cài đặt</button>
-                        </form>
-                    </div>
-                </section>
-            </main>
-        </div>
-    </div>
-
-    <!-- MOBILE BOTTOM -->
-    <nav class="mobile-bottom fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 h-[72px] items-center justify-around safe-bottom">
-        <button onclick="showView('dashboard')" data-view="dashboard" class="mobile-nav text-slate-500 text-[10px] font-semibold flex flex-col items-center gap-1"><i class="fa-solid fa-chart-pie text-lg"></i>Tổng quan</button>
-        <button onclick="showView('orders')" data-view="orders" class="mobile-nav text-slate-500 text-[10px] font-semibold flex flex-col items-center gap-1"><i class="fa-solid fa-clipboard-list text-lg"></i>Đơn hàng</button>
-        <button onclick="openOrderModal()" class="w-12 h-12 -mt-6 rounded-full bg-brand-700 text-white shadow-lg flex items-center justify-center border-4 border-[#f3f8f5]"><i class="fa-solid fa-plus"></i></button>
-        <button onclick="showView('calendar')" data-view="calendar" class="mobile-nav text-slate-500 text-[10px] font-semibold flex flex-col items-center gap-1"><i class="fa-solid fa-calendar-days text-lg"></i>Lịch nở</button>
-        <button onclick="showView('debt')" data-view="debt" class="mobile-nav text-slate-500 text-[10px] font-semibold flex flex-col items-center gap-1"><i class="fa-solid fa-money-bill-wave text-lg"></i>Công nợ</button>
-    </nav>
-</div>
-
-<!-- ORDER MODAL -->
-<div id="orderModal" class="hidden fixed inset-0 z-[200] modal-backdrop items-center justify-center p-3 sm:p-5">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[94vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b border-slate-100 p-4 sm:p-5 flex justify-between items-center z-10">
-            <div><h3 id="orderModalTitle" class="font-black text-lg">Tạo đơn ấp mới</h3><p class="text-xs text-slate-400">Nhập thông tin khách hàng và thanh toán</p></div>
-            <button onclick="closeModal('orderModal')" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <form id="orderForm" onsubmit="saveOrder(event)" class="p-4 sm:p-5">
-            <input id="editOrderId" type="hidden">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="sm:col-span-2"><label class="label">Tên khách hàng</label><input id="customerName" required class="field" placeholder="Nguyễn Văn A"></div>
-                <div><label class="label">Số điện thoại</label><input id="customerPhone" required class="field" placeholder="0912345678"></div>
-                <div><label class="label">Loại giống</label><select id="breedType" onchange="updatePriceAndHatch()" class="field bg-white"><option value="ga" data-days="21" data-price="5000">Gà (21 ngày)</option><option value="vit" data-days="28" data-price="6000">Vịt (28 ngày)</option><option value="ngan" data-days="31" data-price="10000">Ngan (31 ngày)</option></select></div>
-                <div><label class="label">Đơn giá (VNĐ/con)</label><input id="breedPrice" type="number" min="0" required class="field"></div>
-                <div><label class="label">Số lượng đặt</label><input id="quantity" type="number" min="1" required oninput="previewOrderMoney()" class="field"></div>
-                <div><label class="label">Ngày nhận đơn / vào máy</label><input id="orderDate" type="date" required onchange="updatePriceAndHatch()" class="field"></div>
-                <div><label class="label">Tiền khách đã cọc (VNĐ)</label><input id="deposit" type="number" min="0" value="0" required oninput="previewOrderMoney()" class="field"></div>
-            </div>
-
-            <div class="mt-4 bg-slate-50 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center">
-                <div><div class="text-[10px] text-slate-400">TỔNG TIỀN</div><div id="previewTotal" class="font-black mt-1">0 đ</div></div>
-                <div><div class="text-[10px] text-slate-400">ĐÃ CỌC</div><div id="previewDeposit" class="font-black text-brand-700 mt-1">0 đ</div></div>
-                <div><div class="text-[10px] text-slate-400">CÔNG NỢ</div><div id="previewDebt" class="font-black text-red-600 mt-1">0 đ</div></div>
-            </div>
-            <div class="mt-3 bg-brand-50 rounded-xl p-3 flex items-center justify-between text-sm">
-                <span class="text-slate-500"><i class="fa-solid fa-calendar-check text-brand-700 mr-1"></i>Ngày nở dự kiến</span>
-                <b id="previewHatch" class="text-brand-800">--/--/----</b>
-            </div>
-
-            <div class="flex gap-2 mt-5">
-                <button type="button" onclick="closeModal('orderModal')" class="flex-1 border border-slate-200 py-3 rounded-xl font-bold text-slate-600">Hủy</button>
-                <button id="orderSaveButton" class="flex-1 bg-brand-700 hover:bg-brand-800 text-white py-3 rounded-xl font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i>Lưu đơn</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- USER MODAL -->
-<div id="userModal" class="hidden fixed inset-0 z-[220] modal-backdrop items-center justify-center p-3">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div class="p-5 border-b border-slate-100 flex justify-between"><div><h3 id="userModalTitle" class="font-black text-lg">Tạo tài khoản</h3><p class="text-xs text-slate-400">Admin quản lý tài khoản</p></div><button onclick="closeModal('userModal')" class="w-9 h-9 rounded-xl bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div>
-        <form onsubmit="saveUser(event)" class="p-5 space-y-4">
-            <input id="editUsername" type="hidden">
-            <div><label class="label">Tên tài khoản</label><input id="userUsername" required class="field" placeholder="loap01"></div>
-            <div><label class="label">Mật khẩu</label><input id="userPassword" type="password" minlength="4" required class="field" placeholder="Mật khẩu"></div>
-            <div class="flex gap-2"><button type="button" onclick="closeModal('userModal')" class="flex-1 border border-slate-200 py-3 rounded-xl font-bold">Hủy</button><button class="flex-1 bg-brand-700 text-white py-3 rounded-xl font-bold">Lưu</button></div>
-        </form>
-    </div>
-</div>
-
-<!-- CUSTOMER/ORDER DETAIL MODAL -->
-<div id="detailModal" class="hidden fixed inset-0 z-[210] modal-backdrop items-center justify-center p-3">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
-        <div class="p-5 border-b border-slate-100 flex justify-between items-start"><div><h3 id="detailTitle" class="font-black text-lg">Chi tiết</h3><p id="detailSubtitle" class="text-xs text-slate-400"></p></div><button onclick="closeModal('detailModal')" class="w-9 h-9 rounded-xl bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div>
-        <div id="detailContent" class="p-5"></div>
-    </div>
-</div>
-
-<!-- WEATHER MODAL -->
-<div id="weatherModal" class="hidden fixed inset-0 z-[230] modal-backdrop items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
-        <div class="p-5"><div class="flex justify-between items-center"><h3 class="font-black">Thời tiết hiện tại</h3><button onclick="closeModal('weatherModal')" class="w-9 h-9 bg-slate-100 rounded-xl"><i class="fa-solid fa-xmark"></i></button></div><div id="weatherLocation" class="text-sm text-slate-500 mt-2">Đang xác định vị trí...</div><div id="weatherDetails" class="mt-4 text-sm"></div></div>
-    </div>
-</div>
-
-<script>
-/* =========================
-   FIREBASE & GLOBAL VARS
-========================= */
-const firebaseConfig = {
-    apiKey: "AIzaSyBFmwAXG4tgiE7hDUsfelHubULgKmEy0S4",
-    authDomain: "quanlyaptrung.firebaseapp.com",
-    databaseURL: "https://quanlyaptrung-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "quanlyaptrung",
-    storageBucket: "quanlyaptrung.firebasestorage.app",
-    messagingSenderId: "51326284444",
-    appId: "1:51326284444:web:84daa316d9abd965a8b359"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// Tên tài khoản mặc định của Admin hệ thống
-const ADMIN_USERNAME = "admin";
-const ROLE_ADMIN = "admin";
-
-let currentUser = localStorage.getItem("currentUser") || null;
-let allOrders = [];
-let allUsers = [];
-let listenersStarted = false;
-let currentView = "dashboard";
-
-/* =========================
-   HELPERS
-========================= */
-const $ = id => document.getElementById(id);
-const money = n => Number(n || 0).toLocaleString("vi-VN") + " đ";
-const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-const today = () => {
-    const d = new Date();
-    d.setHours(0,0,0,0);
-    return d;
-};
-const parseDMY = s => {
-    if (!s) return null;
-    const p = String(s).split("/");
-    if (p.length !== 3) return null;
-    const d = new Date(Number(p[2]), Number(p[1])-1, Number(p[0]));
-    d.setHours(0,0,0,0);
-    return isNaN(d.getTime()) ? null : d;
-};
-const fmtDate = d => {
-    if (!(d instanceof Date) || isNaN(d)) return "--/--/----";
-    return String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + d.getFullYear();
-};
-const isoToday = () => {
-    const d = new Date();
-    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-};
-function toast(message, type="success") {
-    const wrap = $("toastContainer");
-    const color = type === "error" ? "red" : type === "warning" ? "amber" : "brand";
-    const icon = type === "error" ? "circle-exclamation" : type === "warning" ? "triangle-exclamation" : "circle-check";
-    const el = document.createElement("div");
-    el.className = `toast bg-white border border-${color}-200 shadow-xl rounded-xl p-3 flex gap-3 items-start`;
-    el.innerHTML = `<i class="fa-solid fa-${icon} text-${color}-600 mt-0.5"></i><div class="text-sm font-semibold text-slate-700">${esc(message)}</div>`;
-    wrap.appendChild(el);
-    setTimeout(()=>el.remove(), 3500);
-}
-function openModal(id){ $(id).classList.remove("hidden"); $(id).classList.add("flex"); }
-function closeModal(id){ $(id).classList.add("hidden"); $(id).classList.remove("flex"); }
-function getCurrentOrders() {
-    if (currentUser === ADMIN_USERNAME) return allOrders;
-    return allOrders.filter(o => o.owner === currentUser);
-}
-function orderTotal(o) {
-    if (o.total != null) return Number(o.total) || 0;
-    const qty = Number(o.quantity) || 0;
-    const price = Number(o.priceRaw) || 0;
-    return qty * price;
-}
-function orderDeposit(o) {
-    if (o.deposit != null) return Number(o.deposit) || 0;
-    return 0;
-}
-function orderDebt(o) {
-    if (o.debtRaw != null) return Math.max(0, Number(o.debtRaw)||0);
-    return Math.max(0, orderTotal(o) - orderDeposit(o));
-}
-function normalizeOrder(owner, raw) {
-    const priceRaw = raw.priceRaw != null ? Number(raw.priceRaw) : Number(String(raw.price || "0").replace(/[^\d]/g,"")) || 0;
-    const total = raw.total != null ? Number(raw.total) : (Number(raw.quantity)||0) * priceRaw;
-    const deposit = Number(raw.deposit)||0;
-    const debt = raw.debtRaw != null ? Number(raw.debtRaw) : Math.max(0,total-deposit);
-    return {...raw, owner, priceRaw, total, deposit, debtRaw:debt};
-}
-
-/* =========================
-   AUTH
-========================= */
-function switchAuthTab(tab) {
-    $("loginForm").classList.toggle("hidden", tab !== "login");
-    $("registerForm").classList.toggle("hidden", tab !== "register");
-    $("loginTab").className = tab === "login" ? "flex-1 pb-3 text-brand-700 font-bold border-b-2 border-brand-600" : "flex-1 pb-3 text-slate-400 font-semibold";
-    $("registerTab").className = tab === "register" ? "flex-1 pb-3 text-brand-700 font-bold border-b-2 border-brand-600" : "flex-1 pb-3 text-slate-400 font-semibold";
-}
-function cleanUsername(v){ return String(v||"").trim().replace(/[.#$[\]/]/g,"_"); }
-
-function handleRegister(e) {
-    e.preventDefault();
-    const username = cleanUsername($("regUsername").value);
-    const password = $("regPassword").value;
-    if (!username || username === ADMIN_USERNAME) return toast("Tên tài khoản không hợp lệ hoặc đã dành cho Admin.","error");
-    db.ref("users/"+username).once("value").then(snap=>{
-        if (snap.exists()) return toast("Tài khoản đã tồn tại.","error");
-        return db.ref("users/"+username).set({password, createdAt:Date.now()});
-    }).then(()=>{
-        toast("Tạo tài khoản thành công. Hãy đăng nhập.");
-        $("registerForm").reset();
-        switchAuthTab("login");
-        $("loginUsername").value = username;
-    }).catch(err=>toast("Không thể tạo tài khoản: "+err.message,"error"));
-}
-
-function handleLoginSubmit(e) {
-    e.preventDefault();
-    const username = cleanUsername($("loginUsername").value);
-    const password = $("loginPassword").value;
-    if (!username || !password) return toast("Vui lòng nhập tài khoản và mật khẩu.", "warning");
-
-    db.ref("users/" + username).once("value").then(snap => {
-        if (!snap.exists()) {
-            if (username === ADMIN_USERNAME && password === "admin123") {
-                currentUser = ADMIN_USERNAME;
-                localStorage.setItem("currentUser", currentUser);
-                enterApp();
-                toast("Đăng nhập Admin thành công.");
-                return;
-            }
-            return toast("Tài khoản không tồn tại.", "error");
-        }
-        const data = snap.val();
-        if (data.password === password) {
-            currentUser = username;
-            localStorage.setItem("currentUser", currentUser);
-            enterApp();
-            toast("Đăng nhập thành công.");
-        } else {
-            toast("Sai mật khẩu.", "error");
-        }
-    }).catch(err => toast("Lỗi đăng nhập: " + err.message, "error"));
-}
-
-function handleLogout() {
-    currentUser = null;
-    localStorage.removeItem("currentUser");
-    stopListeners();
-    $("appScreen").classList.add("hidden");
-    $("authScreen").classList.remove("hidden");
-    $("loginPassword").value = "";
-}
-function enterApp() {
-    $("authScreen").classList.add("hidden");
-    $("appScreen").classList.remove("hidden");
-    $("sideUser").textContent = currentUser === ADMIN_USERNAME ? "Quản trị viên" : currentUser;
-    $("headerUser").textContent = currentUser === ADMIN_USERNAME ? "Quản trị viên" : currentUser;
-    $("headerRole").textContent = currentUser === ADMIN_USERNAME ? "ADMIN" : "Tài khoản lò ấp";
-    $("headerAvatar").textContent = (currentUser||"U").charAt(0).toUpperCase();
-    $("dashGreeting").textContent = currentUser === ADMIN_USERNAME ? "Quản trị viên" : currentUser;
-    const isAdmin = currentUser === ADMIN_USERNAME;
-    $("adminUsersNav").classList.toggle("hidden", !isAdmin);
-    $("settingsNav").classList.toggle("hidden", !isAdmin);
-    $("ownerHead").classList.toggle("hidden", !isAdmin);
-    startListeners();
-    showView("dashboard");
-    fetchWeather();
-}
-
-/* =========================
-   DATA LISTENERS
-========================= */
-function stopListeners() {
-    db.ref("orders").off();
-    db.ref("users").off();
-    listenersStarted = false;
-}
-function startListeners() {
-    if (listenersStarted) return;
-    listenersStarted = true;
-
-    if (currentUser === ADMIN_USERNAME) {
-        db.ref("orders").on("value", snap=>{
-            const root = snap.val() || {};
-            allOrders = [];
-            Object.keys(root).forEach(owner=>{
-                Object.values(root[owner] || {}).forEach(o=>allOrders.push(normalizeOrder(owner,o)));
-            });
-            refreshUI();
-        });
-        db.ref("users").on("value", snap=>{
-            const root = snap.val() || {};
-            allUsers = Object.keys(root).map(username=>({username,...(root[username]||{})}));
-            renderAdminUsers();
-            renderAdminCustomers();
-        });
-    } else {
-        db.ref("orders/"+currentUser).on("value", snap=>{
-            allOrders = Object.values(snap.val() || {}).map(o=>normalizeOrder(currentUser,o));
-            refreshUI();
-        });
-    }
-}
-function refreshUI() {
-    renderDashboard();
-    renderOrders();
-    renderCalendar();
-    renderDebt();
-    if (currentUser === ADMIN_USERNAME) {
-        renderAdminUsers();
-        renderAdminCustomers();
-    }
-    updateNotifications();
-}
-
-/* =========================
-   NAVIGATION
-========================= */
-const titles = {
-    dashboard:["Tổng quan","Theo dõi tình hình lò ấp"],
-    orders:["Đơn hàng","Quản lý khách hàng, đơn ấp và thanh toán"],
-    calendar:["Lịch nở","Theo dõi các đơn đến ngày nở"],
-    debt:["Công nợ","Tiền đã cọc và số tiền còn phải thu"],
-    users:["Tài khoản & khách hàng","Quản lý toàn bộ tài khoản và dữ liệu của từng tài khoản"],
-    export:["Xuất dữ liệu","Sao lưu danh sách đơn hàng"],
-    settings:["Cài đặt hệ thống","Thiết lập giao diện website"]
-};
-function showView(view) {
-    if ((view === "users" || view === "settings") && currentUser !== ADMIN_USERNAME) return;
-    currentView = view;
-    document.querySelectorAll(".view-section").forEach(el=>el.classList.add("hidden"));
-    $("view-"+view).classList.remove("hidden");
-    $("pageTitle").textContent = titles[view][0];
-    $("pageSubtitle").textContent = titles[view][1];
-    document.querySelectorAll(".nav-item").forEach(el=>{
-        const active = el.dataset.view === view;
-        el.classList.toggle("active", active);
-    });
-    document.querySelectorAll(".mobile-nav").forEach(el=>{
-        el.classList.toggle("text-brand-700", el.dataset.view === view);
-        el.classList.toggle("text-slate-500", el.dataset.view !== view);
-    });
-    if (view==="orders") renderOrders();
-    if (view==="calendar") renderCalendar();
-    if (view==="debt") renderDebt();
-    if (view==="users") { renderAdminUsers(); renderAdminCustomers(); }
-}
-
-/* =========================
-   DASHBOARD
-========================= */
-function renderDashboard() {
-    const orders = getCurrentOrders();
-    const now = today();
-    const soonLimit = new Date(now); soonLimit.setDate(soonLimit.getDate()+3);
-    const incubating = orders.filter(o=>{const d=parseDMY(o.hatchDate); return d && d>now;});
-    const dueSoon = orders.filter(o=>{const d=parseDMY(o.hatchDate); return d && d>=now && d<=soonLimit;});
-    const debt = orders.reduce((s,o)=>s+orderDebt(o),0);
-    $("statOrders").textContent = orders.length;
-    $("statIncubating").textContent = incubating.length;
-    $("statDue").textContent = dueSoon.length;
-    $("statDebt").textContent = money(debt);
-
-    const recent = [...orders].sort((a,b)=>(parseDMY(a.hatchDate)||new Date(8640000000000000))-(parseDMY(b.hatchDate)||new Date(8640000000000000))).slice(0,6);
-    $("dashboardOrders").innerHTML = recent.length ? recent.map(o=>{
-        const d=parseDMY(o.hatchDate); const diff=d?Math.round((d-now)/86400000):99;
-        const status = diff===0 ? ["HÔM NAY","bg-red-50 text-red-600"] : diff>0 && diff<=3 ? [`CÒN ${diff} NGÀY`,"bg-amber-50 text-amber-700"] : ["ĐANG ẤP","bg-brand-50 text-brand-700"];
-        return `<div class="p-4 flex items-center gap-3 hover:bg-slate-50">
-            <div class="w-10 h-10 rounded-xl ${diff===0?'bg-red-50 text-red-600':'bg-brand-50 text-brand-700'} flex items-center justify-center"><i class="fa-solid fa-egg"></i></div>
-            <div class="min-w-0 flex-1"><div class="font-bold truncate">${esc(o.name)}</div><div class="text-xs text-slate-400">${esc(o.breedText)} · ${esc(o.quantity)} con</div></div>
-            <div class="text-right"><div class="text-xs font-bold ${status[1]} px-2 py-1 rounded-lg">${status[0]}</div><div class="text-[11px] text-slate-400 mt-1">${esc(o.hatchDate)}</div></div>
-        </div>`;
-    }).join("") : `<div class="p-8 text-center text-slate-400 text-sm">Chưa có đơn hàng.</div>`;
-
-    const cal = [...orders].sort((a,b)=>(parseDMY(a.hatchDate)||new Date(8640000000000000))-(parseDMY(b.hatchDate)||new Date(8640000000000000))).slice(0,7);
-    $("dashboardCalendar").innerHTML = cal.length ? cal.map(o=>{
-        const d=parseDMY(o.hatchDate); const diff=d?Math.round((d-now)/86400000):999;
-        const color=diff===0?"bg-red-500":diff<=3?"bg-amber-500":"bg-brand-500";
-        return `<div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50">
-            <div class="w-2.5 h-2.5 rounded-full ${color} ${diff===0?'pulse-dot':''}"></div>
-            <div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate">${esc(o.name)}</div><div class="text-[11px] text-slate-400">${esc(o.breedText)} · ${esc(o.quantity)} con</div></div>
-            <div class="text-xs font-bold">${esc(o.hatchDate)}</div>
-        </div>`;
-    }).join("") : `<div class="py-8 text-center text-slate-400 text-sm">Chưa có lịch nở.</div>`;
-}
-
-/* =========================
-   ORDERS
-========================= */
-function renderOrders() {
-    const base = getCurrentOrders();
-    const keyword = ($("orderSearch")?.value || "").toLowerCase().trim();
-    const breed = $("orderBreedFilter")?.value || "";
-    const debtFilter = $("orderDebtFilter")?.value || "";
-    const filtered = base.filter(o=>{
-        const text = `${o.name||""} ${o.phone||""} ${o.owner||""}`.toLowerCase();
-        if (keyword && !text.includes(keyword)) return false;
-        if (breed && !(o.breedText||"").includes(breed)) return false;
-        const debt = orderDebt(o);
-        if (debtFilter==="debt" && debt<=0) return false;
-        if (debtFilter==="paid" && debt>0) return false;
-        return true;
-    });
-    $("ordersCountText").textContent = `${filtered.length} / ${base.length} đơn`;
-    const colspan = currentUser===ADMIN_USERNAME ? 9 : 8;
-    $("ordersTableBody").innerHTML = filtered.length ? filtered.map(o=>orderRow(o)).join("") : `<tr><td colspan="${colspan}" class="p-10 text-center text-slate-400">Không tìm thấy dữ liệu phù hợp.</td></tr>`;
-    $("ordersMobile").innerHTML = filtered.length ? filtered.map(o=>orderCard(o)).join("") : `<div class="card p-8 text-center text-slate-400">Không có đơn phù hợp.</div>`;
-}
-function orderRow(o) {
-    const debt=orderDebt(o), deposit=orderDeposit(o), total=orderTotal(o);
-    return `<tr class="hover:bg-slate-50">
-        ${currentUser===ADMIN_USERNAME ? `<td class="px-4 py-3 font-bold text-brand-700">${esc(o.owner)}</td>` : ""}
-        <td class="px-4 py-3"><div class="font-bold">${esc(o.name)}</div><div class="text-[11px] text-brand-600"><i class="fa-solid fa-phone mr-1"></i>${esc(o.phone)}</div></td>
-        <td class="px-4 py-3"><div class="font-semibold">${esc(o.breedText)}</div><span class="text-[11px] bg-brand-50 text-brand-700 px-2 py-1 rounded-lg font-bold">${esc(o.quantity)} con</span></td>
-        <td class="px-4 py-3 font-semibold">${money(o.priceRaw)}</td>
-        <td class="px-4 py-3 text-slate-600">${esc(o.enterDate)}</td>
-        <td class="px-4 py-3 font-bold text-brand-800">${esc(o.hatchDate)}</td>
-        <td class="px-4 py-3 font-bold text-brand-700">${money(deposit)}</td>
-        <td class="px-4 py-3 font-bold ${debt>0?'text-red-600':'text-brand-700'}">${money(debt)}</td>
-        <td class="px-4 py-3"><div class="flex justify-center gap-1">
-            <button onclick="viewOrder('${esc(o.owner)}','${esc(o.id)}')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600" title="Xem"><i class="fa-solid fa-eye text-xs"></i></button>
-            ${currentUser===o.owner ? `<button onclick="editOrder('${esc(o.id)}')" class="w-8 h-8 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700" title="Sửa"><i class="fa-solid fa-pen text-xs"></i></button>` : ""}
-            ${currentUser===ADMIN_USERNAME ? `<button onclick="adminDeleteOrder('${esc(o.owner)}','${esc(o.id)}')" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600" title="Xóa"><i class="fa-solid fa-trash text-xs"></i></button>` : ""}
-            ${currentUser!==ADMIN_USERNAME ? `<button onclick="deleteOrder('${esc(o.id)}')" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600" title="Xóa"><i class="fa-solid fa-trash text-xs"></i></button>` : ""}
-        </div></td>
-    </tr>`;
-}
-function orderCard(o) {
-    const debt=orderDebt(o), deposit=orderDeposit(o);
-    return `<div class="card p-4">
-        <div class="flex items-start gap-3">
-            <div class="w-11 h-11 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center"><i class="fa-solid fa-user"></i></div>
-            <div class="min-w-0 flex-1"><div class="font-black">${esc(o.name)}</div><div class="text-xs text-brand-600"><i class="fa-solid fa-phone mr-1"></i>${esc(o.phone)}</div>${currentUser===ADMIN_USERNAME?`<div class="text-[10px] text-slate-400 mt-1">Tài khoản: ${esc(o.owner)}</div>`:""}</div>
-            <button onclick="viewOrder('${esc(o.owner)}','${esc(o.id)}')" class="w-9 h-9 rounded-xl bg-slate-100"><i class="fa-solid fa-ellipsis"></i></button>
-        </div>
-        <div class="grid grid-cols-2 gap-2 mt-4 text-sm">
-            <div class="bg-slate-50 rounded-xl p-3"><div class="text-[10px] text-slate-400">GIỐNG</div><b>${esc(o.breedText)} · ${esc(o.quantity)} con</b></div>
-            <div class="bg-slate-50 rounded-xl p-3"><div class="text-[10px] text-slate-400">ĐƠN GIÁ</div><b>${money(o.priceRaw)}</b></div>
-            <div class="bg-slate-50 rounded-xl p-3"><div class="text-[10px] text-slate-400">CHO VÀO MÁY</div><b>${esc(o.enterDate)}</b></div>
-            <div class="bg-brand-50 rounded-xl p-3"><div class="text-[10px] text-brand-600">NGÀY NỞ</div><b class="text-brand-800">${esc(o.hatchDate)}</b></div>
-        </div>
-        <div class="grid grid-cols-2 gap-2 mt-2">
-            <div class="border border-brand-100 rounded-xl p-3"><div class="text-[10px] text-slate-400">ĐÃ CỌC</div><b class="text-brand-700">${money(deposit)}</b></div>
-            <div class="border border-red-100 rounded-xl p-3"><div class="text-[10px] text-slate-400">CÔNG NỢ</div><b class="${debt>0?'text-red-600':'text-brand-700'}">${money(debt)}</b></div>
-        </div>
-        <div class="flex gap-2 mt-3">
-            ${currentUser===o.owner ? `<button onclick="editOrder('${esc(o.id)}')" class="flex-1 py-2.5 rounded-xl bg-brand-50 text-brand-700 font-bold text-sm"><i class="fa-solid fa-pen mr-1"></i>Sửa</button>`:""}
-            <button onclick="${currentUser===ADMIN_USERNAME?`adminDeleteOrder('${esc(o.owner)}','${esc(o.id)}')`:`deleteOrder('${esc(o.id)}')`}" class="flex-1 py-2.5 rounded-xl bg-red-50 text-red-600 font-bold text-sm"><i class="fa-solid fa-trash mr-1"></i>Xóa</button>
-        </div>
-    </div>`;
-}
-function openOrderModal(order=null) {
-    if (!currentUser || currentUser===ADMIN_USERNAME) {
-        if (currentUser===ADMIN_USERNAME) return toast("Admin đang ở chế độ quản lý tổng thể. Hãy chọn tài khoản và tạo đơn từ tài khoản đó.","warning");
-        return;
-    }
-    $("orderModalTitle").textContent = order ? "Sửa đơn hàng" : "Tạo đơn ấp mới";
-    $("editOrderId").value = order?.id || "";
-    $("customerName").value = order?.name || "";
-    $("customerPhone").value = order?.phone || "";
-    $("breedPrice").value = order?.priceRaw || "";
-    $("quantity").value = order?.quantity || "";
-    $("deposit").value = order?.deposit || 0;
-    $("orderDate").value = order ? toISODate(order.enterDate) : isoToday();
-    $("breedType").value = order ? breedCode(order.breedText) : "ga";
-    updatePriceAndHatch(order);
-    openModal("orderModal");
-}
-function breedCode(text) {
-    const t=String(text||"").toLowerCase();
-    return t.includes("vịt")?"vit":t.includes("ngan")?"ngan":"ga";
-}
-function toISODate(dmy) {
-    const d=parseDMY(dmy); return d ? d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") : isoToday();
-}
-function updatePriceAndHatch(order) {
-    const sel=$("breedType"), opt=sel.options[sel.selectedIndex];
-    if (!order && (!$("breedPrice").value || $("breedPrice").dataset.auto==="1")) $("breedPrice").value=opt.dataset.price;
-    $("breedPrice").dataset.auto="1";
-    const dateVal=$("orderDate").value, days=Number(opt.dataset.days);
-    let hatch=null;
-    if(dateVal){ hatch=new Date(dateVal+"T00:00:00"); hatch.setDate(hatch.getDate()+days); }
-    $("previewHatch").textContent=fmtDate(hatch);
-    previewOrderMoney();
-}
-function previewOrderMoney() {
-    const total=(Number($("quantity").value)||0)*(Number($("breedPrice").value)||0);
-    const dep=Number($("deposit").value)||0;
-    $("previewTotal").textContent=money(total);
-    $("previewDeposit").textContent=money(dep);
-    $("previewDebt").textContent=money(Math.max(0,total-dep));
-}
-function saveOrder(e) {
-    e.preventDefault();
-    if (!currentUser || currentUser===ADMIN_USERNAME) return;
-    const id=$("editOrderId").value || ("order_"+Date.now());
-    const sel=$("breedType"), opt=sel.options[sel.selectedIndex];
-    const name=$("customerName").value.trim(), phone=$("customerPhone").value.trim();
-    const price=Number($("breedPrice").value)||0, qty=Number($("quantity").value)||0, deposit=Number($("deposit").value)||0;
-    const dateVal=$("orderDate").value, enter=new Date(dateVal+"T00:00:00"), hatch=new Date(enter);
-    hatch.setDate(hatch.getDate()+Number(opt.dataset.days));
-    const total=price*qty, debt=Math.max(0,total-deposit);
-    const data={id,name,phone,breedText:opt.text.split(" ")[0],quantity:qty,price:money(price),priceRaw:price,total,deposit,debt:money(debt),debtRaw:debt,enterDate:fmtDate(enter),hatchDate:fmtDate(hatch),updatedAt:Date.now()};
-    db.ref("orders/"+currentUser+"/"+id).set(data).then(()=>{
-        toast(id.startsWith("order_") && !allOrders.some(x=>x.id===id) ? "Đã tạo đơn mới." : "Đã cập nhật đơn.");
-        closeModal("orderModal");
-        $("orderForm").reset();
-        $("orderDate").value=isoToday();
-        updatePriceAndHatch();
-    }).catch(err=>toast("Không thể lưu đơn: "+err.message,"error"));
-}
-function editOrder(id) {
-    const o=allOrders.find(x=>x.owner===currentUser && x.id===id);
-    if(o) openOrderModal(o);
-}
-function deleteOrder(id) {
-    if(!confirm("Xóa đơn hàng này? Dữ liệu sẽ bị xóa khỏi Firebase.")) return;
-    db.ref("orders/"+currentUser+"/"+id).remove().then(()=>toast("Đã xóa đơn."));
-}
-function adminDeleteOrder(owner,id) {
-    if(currentUser!==ADMIN_USERNAME) return;
-    if(!confirm(`Xóa đơn của tài khoản "${owner}"?`)) return;
-    db.ref("orders/"+owner+"/"+id).remove().then(()=>toast("Admin đã xóa đơn."));
-}
-
-/* =========================
-   ORDER DETAIL
-========================= */
-function viewOrder(owner,id) {
-    const o=allOrders.find(x=>x.owner===owner && x.id===id);
-    if(!o) return;
-    const total=orderTotal(o), dep=orderDeposit(o), debt=orderDebt(o);
-    $("detailTitle").textContent=o.name;
-    $("detailSubtitle").textContent=(currentUser===ADMIN_USERNAME?`Tài khoản: ${owner} · `:"")+o.phone;
-    $("detailContent").innerHTML=`
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-slate-50 rounded-xl p-4"><div class="text-[10px] text-slate-400">GIỐNG</div><div class="font-black mt-1">${esc(o.breedText)} · ${esc(o.quantity)} con</div></div>
-            <div class="bg-slate-50 rounded-xl p-4"><div class="text-[10px] text-slate-400">ĐƠN GIÁ</div><div class="font-black mt-1">${money(o.priceRaw)}</div></div>
-            <div class="bg-slate-50 rounded-xl p-4"><div class="text-[10px] text-slate-400">CHO VÀO MÁY</div><div class="font-black mt-1">${esc(o.enterDate)}</div></div>
-            <div class="bg-brand-50 rounded-xl p-4"><div class="text-[10px] text-brand-600">DỰ KIẾN NỞ</div><div class="font-black text-brand-800 mt-1">${esc(o.hatchDate)}</div></div>
-        </div>
-        <div class="mt-4 border border-slate-100 rounded-2xl overflow-hidden">
-            <div class="flex justify-between p-4 border-b"><span>Tổng giá trị đơn</span><b>${money(total)}</b></div>
-            <div class="flex justify-between p-4 border-b bg-brand-50"><span>Tiền đã cọc</span><b class="text-brand-700">${money(dep)}</b></div>
-            <div class="flex justify-between p-4"><span class="font-bold">Công nợ còn lại</span><b class="${debt>0?'text-red-600':'text-brand-700'}">${money(debt)}</b></div>
-        </div>
-        <div class="mt-4 flex gap-2">
-            ${owner===currentUser ? `<button onclick="closeModal('detailModal');editOrder('${esc(id)}')" class="flex-1 bg-brand-700 text-white py-3 rounded-xl font-bold">Sửa đơn</button>`:""}
-            ${currentUser===ADMIN_USERNAME ? `<button onclick="closeModal('detailModal');adminDeleteOrder('${esc(owner)}','${esc(id)}')" class="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-bold">Xóa đơn</button>`:""}
-        </div>`;
-    openModal("detailModal");
-}
-
-/* =========================
-   CALENDAR
-========================= */
-function renderCalendar() {
-    const orders=getCurrentOrders(), now=today();
-    const end=new Date(now); end.setDate(end.getDate()+14);
-    const due=orders.filter(o=>{const d=parseDMY(o.hatchDate);return d&&d>=now&&d<=end;}).sort((a,b)=>parseDMY(a.hatchDate)-parseDMY(b.hatchDate));
-    $("calendarDueBadge").textContent=due.length+" đơn";
-    const groups={};
-    due.forEach(o=>{groups[o.hatchDate]=(groups[o.hatchDate]||[]).concat(o);});
-    $("calendarList").innerHTML=Object.keys(groups).length ? Object.keys(groups).sort((a,b)=>parseDMY(a)-parseDMY(b)).map(date=>{
-        const d=parseDMY(date), diff=Math.round((d-now)/86400000);
-        const label=diff===0?"HÔM NAY":diff===1?"NGÀY MAI":`CÒN ${diff} NGÀY`;
-        return `<div class="p-4">
-            <div class="flex items-center justify-between mb-2"><div class="font-black">${date}</div><span class="text-[10px] font-bold px-2 py-1 rounded-lg ${diff===0?'bg-red-50 text-red-600':diff<=3?'bg-amber-50 text-amber-700':'bg-brand-50 text-brand-700'}">${label}</span></div>
-            <div class="space-y-2">${groups[date].map(o=>`<div onclick="viewOrder('${esc(o.owner)}','${esc(o.id)}')" class="cursor-pointer bg-slate-50 hover:bg-brand-50 rounded-xl p-3 flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-brand-700"><i class="fa-solid fa-egg"></i></div>
-                <div class="flex-1 min-w-0"><div class="font-bold truncate">${esc(o.name)}</div><div class="text-xs text-slate-400">${esc(o.breedText)} · ${esc(o.quantity)} con ${currentUser===ADMIN_USERNAME?`· ${esc(o.owner)}`:""}</div></div>
-                <i class="fa-solid fa-chevron-right text-slate-300"></i>
-            </div>`).join("")}</div>
-        </div>`;
-    }).join("") : `<div class="p-10 text-center text-slate-400">Không có đơn nào nở trong 14 ngày tới.</div>`;
-}
-function openReferenceModal() {
-    $("refDate").value=isoToday();
-    $("refResult").classList.add("hidden");
-    showView("calendar");
-}
-function calculateReference() {
-    const days=Number($("refBreed").value), val=$("refDate").value;
-    if(!val) return toast("Vui lòng chọn ngày nở.","warning");
-    const d=new Date(val+"T00:00:00"); d.setDate(d.getDate()-days);
-    $("refResultDate").textContent=fmtDate(d);
-    $("refResult").classList.remove("hidden");
-}
-
-/* =========================
-   DEBT
-========================= */
-function renderDebt() {
-    const orders=getCurrentOrders();
-    const total=orders.reduce((s,o)=>s+orderTotal(o),0), dep=orders.reduce((s,o)=>s+orderDeposit(o),0), rem=orders.reduce((s,o)=>s+orderDebt(o),0);
-    $("debtTotal").textContent=money(total); $("debtDeposit").textContent=money(dep); $("debtRemain").textContent=money(rem);
-    const key=($("debtSearch")?.value||"").toLowerCase().trim();
-    const debtOrders=orders.filter(o=>orderDebt(o)>0 && `${o.name||""} ${o.phone||""} ${o.owner||""}`.toLowerCase().includes(key)).sort((a,b)=>orderDebt(b)-orderDebt(a));
-    $("debtList").innerHTML=debtOrders.length ? debtOrders.map(o=>`
-        <div class="p-4 flex items-center gap-3 hover:bg-slate-50">
-            <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center"><i class="fa-solid fa-user"></i></div>
-            <div class="flex-1 min-w-0"><div class="font-bold truncate">${esc(o.name)}</div><div class="text-xs text-slate-400">${esc(o.phone)} · ${esc(o.breedText)} · ${esc(o.quantity)} con ${currentUser===ADMIN_USERNAME?`· TK: <b>${esc(o.owner)}</b>`:""}</div></div>
-            <div class="text-right"><div class="text-xs text-slate-400">Đã cọc ${money(orderDeposit(o))}</div><div class="font-black text-red-600">${money(orderDebt(o))}</div></div>
-        </div>`).join("") : `<div class="p-10 text-center text-slate-400">Không còn khách có công nợ.</div>`;
-}
-
-/* =========================
-   ADMIN USER MANAGEMENT
-========================= */
-function renderAdminUsers() {
-    if(currentUser!==ADMIN_USERNAME) return;
-    const key=($("userSearch")?.value||"").toLowerCase().trim();
-    const users=allUsers.filter(u=>u.username.toLowerCase().includes(key));
-    const uniqueCustomers=new Set(allOrders.map(o=>`${o.owner}::${o.name}::${o.phone}`));
-    const adminDebt=allOrders.reduce((s,o)=>s+orderDebt(o),0);
-    $("adminUserCount").textContent=allUsers.length;
-    $("adminCustomerCount").textContent=uniqueCustomers.size;
-    $("adminDebtCount").textContent=money(adminDebt);
-    $("adminUsersBody").innerHTML=users.length ? users.map(u=>{
-        const os=allOrders.filter(o=>o.owner===u.username);
-        const cs=new Set(os.map(o=>`${o.name}::${o.phone}`)).size;
-        const debt=os.reduce((s,o)=>s+orderDebt(o),0);
-        return `<tr class="hover:bg-slate-50">
-            <td class="px-4 py-3"><div class="font-black text-brand-800">${esc(u.username)}</div><div class="text-[10px] text-slate-400">${u.createdAt?new Date(u.createdAt).toLocaleDateString("vi-VN"):""}</div></td>
-            <td class="px-4 py-3 font-bold">${os.length}</td>
-            <td class="px-4 py-3">${cs}</td>
-            <td class="px-4 py-3 font-bold ${debt?'text-red-600':'text-brand-700'}">${money(debt)}</td>
-            <td class="px-4 py-3"><div class="flex gap-1">
-                <button onclick="filterAdminOwner('${esc(u.username)}')" class="px-2.5 py-1.5 rounded-lg bg-brand-50 text-brand-700 text-xs font-bold">Khách hàng</button>
-                <button onclick="openUserModal('${esc(u.username)}')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600"><i class="fa-solid fa-pen text-xs"></i></button>
-                <button onclick="deleteUser('${esc(u.username)}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600"><i class="fa-solid fa-trash text-xs"></i></button>
-            </div></td>
-        </tr>`;
-    }).join("") : `<tr><td colspan="5" class="p-8 text-center text-slate-400">Chưa có tài khoản người dùng.</td></tr>`;
-}
-function renderAdminCustomers() {
-    if(currentUser!==ADMIN_USERNAME) return;
-    const sel=$("adminOwnerFilter");
-    const current=sel.value;
-    const names=[...new Set(allUsers.map(u=>u.username))];
-    sel.innerHTML=`<option value="">Tất cả tài khoản</option>`+names.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join("");
-    if(names.includes(current)) sel.value=current;
-    const owner=sel.value;
-    const filtered=allOrders.filter(o=>!owner||o.owner===owner);
-    const customers={};
-    filtered.forEach(o=>{
-        const key=`${o.owner}::${o.name}::${o.phone}`;
-        if(!customers[key]) customers[key]={owner:o.owner,name:o.name,phone:o.phone,orders:[],debt:0,total:0,deposit:0};
-        customers[key].orders.push(o);
-        customers[key].debt+=orderDebt(o); customers[key].total+=orderTotal(o); customers[key].deposit+=orderDeposit(o);
-    });
-    const arr=Object.values(customers).sort((a,b)=>b.debt-a.debt);
-    $("adminCustomersList").innerHTML=arr.length ? arr.map(c=>`
-        <div class="p-4">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                <div class="w-11 h-11 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center"><i class="fa-solid fa-user"></i></div>
-                <div class="flex-1"><div class="font-black">${esc(c.name)}</div><div class="text-xs text-slate-400">${esc(c.phone)} · Tài khoản: <b>${esc(c.owner)}</b></div></div>
-                <div class="grid grid-cols-3 gap-2 text-right">
-                    <div><div class="text-[9px] text-slate-400">ĐƠN</div><b>${c.orders.length}</b></div>
-                    <div><div class="text-[9px] text-slate-400">ĐÃ CỌC</div><b class="text-brand-700">${money(c.deposit)}</b></div>
-                    <div><div class="text-[9px] text-slate-400">CÔNG NỢ</div><b class="${c.debt?'text-red-600':'text-brand-700'}">${money(c.debt)}</b></div>
                 </div>
-                <button onclick="showCustomerOrders('${esc(c.owner)}','${esc(c.name)}','${esc(c.phone)}')" class="w-full sm:w-auto px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">Xem đơn</button>
             </div>
-        </div>`).join("") : `<div class="p-10 text-center text-slate-400">Chưa có khách hàng.</div>`;
-}
-function filterAdminOwner(username) {
-    $("adminOwnerFilter").value=username;
-    renderAdminCustomers();
-    $("view-users").scrollIntoView({behavior:"smooth"});
-}
-function showCustomerOrders(owner,name,phone) {
-    const os=allOrders.filter(o=>o.owner===owner && o.name===name && o.phone===phone);
-    $("detailTitle").textContent=name;
-    $("detailSubtitle").textContent=`${phone} · Tài khoản: ${owner}`;
-    $("detailContent").innerHTML=`<div class="space-y-2">${os.map(o=>`
-        <div class="border border-slate-100 rounded-xl p-3 flex items-center gap-3">
-            <div class="flex-1"><b>${esc(o.breedText)} · ${esc(o.quantity)} con</b><div class="text-xs text-slate-400">Vào máy ${esc(o.enterDate)} · Nở ${esc(o.hatchDate)}</div></div>
-            <div class="text-right text-xs"><div class="text-brand-700">Cọc ${money(orderDeposit(o))}</div><div class="text-red-600 font-bold">Nợ ${money(orderDebt(o))}</div></div>
-            <button onclick="viewOrder('${esc(owner)}','${esc(o.id)}')" class="w-8 h-8 rounded-lg bg-slate-100"><i class="fa-solid fa-eye text-xs"></i></button>
-        </div>`).join("")}</div>`;
-    openModal("detailModal");
-}
-function openUserModal(username="") {
-    if(currentUser!==ADMIN_USERNAME) return;
-    $("userModalTitle").textContent=username?"Sửa tài khoản":"Tạo tài khoản";
-    $("editUsername").value=username;
-    $("userUsername").value=username;
-    $("userUsername").disabled=!!username;
-    $("userPassword").value="";
-    $("userPassword").placeholder=username?"Nhập mật khẩu mới":"Mật khẩu";
-    $("userPassword").required=true;
-    openModal("userModal");
-}
-function saveUser(e) {
-    e.preventDefault();
-    if(currentUser!==ADMIN_USERNAME) return;
-    const old=$("editUsername").value;
-    const username=cleanUsername($("userUsername").value);
-    const password=$("userPassword").value;
-    if(!username || username===ADMIN_USERNAME) return toast("Tên tài khoản không hợp lệ.","error");
-    if(old) {
-        if(!password) return toast("Vui lòng nhập mật khẩu mới.","warning");
-        db.ref("users/"+old).update({password,updatedAt:Date.now()}).then(()=>{toast("Đã đổi mật khẩu.");closeModal("userModal");});
-    } else {
-        db.ref("users/"+username).once("value").then(s=>{
-            if(s.exists()) throw new Error("Tài khoản đã tồn tại.");
-            return db.ref("users/"+username).set({password,createdAt:Date.now()});
-        }).then(()=>{toast("Đã tạo tài khoản.");closeModal("userModal");}).catch(e=>toast(e.message,"error"));
-    }
-}
-function deleteUser(username) {
-    if(currentUser!==ADMIN_USERNAME) return;
-    const hasOrders=allOrders.some(o=>o.owner===username);
-    const msg=hasOrders ? `Tài khoản "${username}" đang có đơn hàng. Xóa tài khoản và TOÀN BỘ đơn của tài khoản này?` : `Xóa tài khoản "${username}"?`;
-    if(!confirm(msg)) return;
-    Promise.all([
-        db.ref("users/"+username).remove(),
-        db.ref("orders/"+username).remove()
-    ]).then(()=>toast("Đã xóa tài khoản và dữ liệu của tài khoản."));
-}
 
-/* =========================
-   EXPORT
-========================= */
-function exportCSV() {
-    const orders=getCurrentOrders();
-    if(!orders.length) return toast("Không có dữ liệu để xuất.","warning");
-    let csv="\uFEFFTài khoản,Khách hàng,Số điện thoại,Giống,Số lượng,Đơn giá,Tổng tiền,Ngày vào máy,Ngày nở dự kiến,Tiền đã cọc,Công nợ\n";
-    orders.forEach(o=>{
-        const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-        csv += [q(o.owner),q(o.name),q(o.phone),q(o.breedText),o.quantity,q(money(o.priceRaw)),q(money(orderTotal(o))),q(o.enterDate),q(o.hatchDate),q(money(orderDeposit(o))),q(money(orderDebt(o)))].join(",")+"\n";
-    });
-    downloadBlob(csv,`Danh_Sach_Ap_Trung_${isoToday()}.csv`,"text/csv;charset=utf-8;");
-}
-function exportTXT() {
-    const orders=getCurrentOrders();
-    if(!orders.length) return toast("Không có dữ liệu để xuất.","warning");
-    let text="=== BÁO CÁO QUẢN LÝ LÒ ẤP TRỨNG ===\n";
-    text+="Ngày xuất: "+new Date().toLocaleString("vi-VN")+"\n\n";
-    orders.forEach((o,i)=>{
-        text+=`[ĐƠN ${i+1}]\nTài khoản: ${o.owner}\nKhách hàng: ${o.name}\nSĐT: ${o.phone}\nGiống: ${o.breedText} | Số lượng: ${o.quantity} con\nĐơn giá: ${money(o.priceRaw)} | Tổng: ${money(orderTotal(o))}\nNgày vào máy: ${o.enterDate} | Ngày nở: ${o.hatchDate}\nTiền đã cọc: ${money(orderDeposit(o))}\nCông nợ: ${money(orderDebt(o))}\n----------------------------------------\n`;
-    });
-    downloadBlob(text,`Bao_Cao_Ap_Trung_${isoToday()}.txt`,"text/plain;charset=utf-8;");
-}
-function downloadBlob(content,name,type) {
-    const blob=new Blob([content],{type}), url=URL.createObjectURL(blob), a=document.createElement("a");
-    a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
-}
+            <!-- 2. VIEW CHỦ LÒ ẤP -->
+            <div id="view-owner" class="space-y-4 hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Vận Hành Lò Ấp</span>
+                    <span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded">Lò Ấp Số 1</span>
+                </div>
 
-/* =========================
-   NOTIFICATIONS / WEATHER
-========================= */
-function updateNotifications() {
-    const orders=getCurrentOrders(), t=today();
-    const due=orders.filter(o=>{const d=parseDMY(o.hatchDate);return d&&d.getTime()===t.getTime();});
-    const b=$("headerNotifBadge");
-    b.textContent=due.length;b.classList.toggle("hidden",due.length===0);
-}
-function fetchWeather() {
-    if(!navigator.geolocation) { $("weatherText").textContent="Thời tiết"; return; }
-    navigator.geolocation.getCurrentPosition(async pos=>{
-        const {latitude:lat,longitude:lon}=pos.coords;
-        try {
-            const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);
-            const data=await res.json();
-            if(data.current_weather){
-                const temp=data.current_weather.temperature, wind=data.current_weather.windspeed;
-                $("weatherText").textContent=`${temp}°C · Gió ${wind} km/h`;
-                $("weatherDetails").innerHTML=`<div class="text-center"><div class="text-4xl font-black text-brand-700">${temp}°C</div><div class="text-slate-500 mt-1">Gió ${wind} km/h</div><div class="mt-4 grid grid-cols-2 gap-2">${data.daily?.temperature_2m_min?.slice(0,3).map((x,i)=>`<div class="bg-slate-50 rounded-xl p-3"><div class="text-xs text-slate-400">${i===0?"Hôm nay":"Ngày "+i}</div><b>${x}°C - ${data.daily.temperature_2m_max[i]}°C</b></div>`).join("")||""}</div>`;
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-[11px] font-semibold text-slate-400">Trứng đang ấp</span>
+                        <div class="text-2xl font-black text-slate-800 mt-1">1,240</div>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-[11px] font-semibold text-slate-400">Sắp nở (3 ngày)</span>
+                        <div class="text-2xl font-black text-amber-600 mt-1">350</div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-sm text-slate-800">Đơn hàng cần xử lý</h3>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-xs">Khách gửi trứng gà</div>
+                            <div class="text-[10px] text-slate-500">500 quả • Nở: 02/09/2026</div>
+                        </div>
+                        <button class="px-2.5 py-1.5 bg-emerald-600 text-white text-[11px] font-bold rounded-lg">Cập nhật</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. VIEW KHÁCH HÀNG -->
+            <div id="view-customer" class="space-y-4 hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Khách Hàng Theo Dõi</span>
+                </div>
+
+                <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-md">
+                    <span class="text-xs text-emerald-100">Đơn ấp hiện tại của bạn</span>
+                    <div class="text-xl font-bold mt-1">500 Trứng Gà Ri</div>
+                    <div class="mt-3 bg-white/20 backdrop-blur-md rounded-xl p-2.5 flex justify-between text-xs">
+                        <span>Dự kiến nở:</span>
+                        <span class="font-bold">02/09/2026</span>
+                    </div>
+                </div>
+
+                <button class="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition">
+                    <i class="fa-solid fa-plus"></i> Đặt lịch gửi trứng mới
+                </button>
+            </div>
+
+        </main>
+
+        <!-- MOBILE BOTTOM NAVIGATION -->
+        <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 px-2 py-2 bottom-safe flex items-center justify-around">
+            <a href="#" class="flex flex-col items-center gap-1 text-emerald-600 w-14 py-1">
+                <i class="fa-solid fa-chart-pie text-lg"></i>
+                <span class="text-[10px] font-bold">Tổng quan</span>
+            </a>
+            <a href="#" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 w-14 py-1">
+                <i class="fa-solid fa-clipboard-list text-lg"></i>
+                <span class="text-[10px] font-medium">Đơn ấp</span>
+            </a>
+
+            <!-- Nút Nổi Center -->
+            <div class="relative -top-5">
+                <button class="w-13 h-13 rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/40 flex items-center justify-center text-xl border-4 border-slate-50 active:scale-90 transition">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <a href="#" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 w-14 py-1">
+                <i class="fa-solid fa-users text-lg"></i>
+                <span class="text-[10px] font-medium">Tài khoản</span>
+            </a>
+            <a href="#" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 w-14 py-1">
+                <i class="fa-solid fa-gear text-lg"></i>
+                <span class="text-[10px] font-medium">Cài đặt</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC & FIREBASE INTEGRATION ==================== -->
+    <script>
+        // CẤU HÌNH FIREBASE CHUẨN TỪ PROJECT QUANLYTRUNGAP
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqTPVij6QnPsrNx65fmTHNwxQfAqP2zAs",
+            authDomain: "quanlytrungap.firebaseapp.com",
+            projectId: "quanlytrungap",
+            storageBucket: "quanlytrungap.firebasestorage.app",
+            messagingSenderId: "336046803137",
+            appId: "1:336046803137:web:b1ec31338f577a2e9dec40",
+            databaseURL: "https://quanlytrungap-default-rtdb.firebaseio.com"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let isSignUpMode = false;
+        let inactivityTimer = null;
+        const TIMEOUT_DURATION = 1 * 60 * 1000; // Tự động đăng xuất sau 1 PHÚT
+
+        // TỰ ĐỘNG ĐĂNG XUẤT SAU 1 PHÚT KHÔNG CHẠM/THAO TÁC
+        function resetInactivityTimer() {
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            if (auth.currentUser) {
+                inactivityTimer = setTimeout(() => {
+                    alert("Tài khoản đã tự động đăng xuất do 1 phút không có thao tác!");
+                    logoutUser();
+                }, TIMEOUT_DURATION);
             }
+        }
+
+        ['click', 'mousemove', 'keypress', 'scroll', 'touchstart', 'touchmove'].forEach(event => {
+            document.addEventListener(event, resetInactivityTimer, true);
+        });
+
+        // CHUYỂN ĐỔI CHẾ ĐỘ ĐĂNG NHẬP <-> ĐĂNG KÝ (KHÁCH HÀNG)
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('auth-title').innerText = isSignUpMode ? "Tạo Tài Khoản Khách Hàng" : "Đăng Nhập System";
+            document.getElementById('btn-submit').innerText = isSignUpMode ? "ĐĂNG KÝ TÀI KHOẢN" : "ĐĂNG NHẬP";
+            document.getElementById('btn-toggle-mode').innerText = isSignUpMode ? "Đã có tài khoản? Đăng nhập ngay" : "Chưa có tài khoản? Đăng ký ngay";
+            
+            document.getElementById('field-fullname').classList.toggle('hidden', !isSignUpMode);
+            document.getElementById('remember-box').classList.toggle('hidden', isSignUpMode);
+        }
+
+        // XỬ LÝ ĐĂNG NHẬP / ĐĂNG KÝ
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+
             try {
-                const geo=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=vi`);
-                const gd=await geo.json(); const a=gd.address||{};
-                $("weatherLocation").textContent=[a.suburb||a.district,a.city||a.town||a.village].filter(Boolean).join(", ")||"Vị trí hiện tại";
-            } catch {}
-        } catch { $("weatherText").textContent="Không tải được thời tiết"; }
-    },()=>{ $("weatherText").textContent="Chưa cấp quyền vị trí"; });
-}
-function openWeatherModal(){openModal("weatherModal");}
+                if (isSignUpMode) {
+                    // Đăng ký MẶC ĐỊNH LÀ KHÁCH HÀNG (customer)
+                    const fullname = document.getElementById('fullname').value;
+                    
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
 
-/* =========================
-   SETTINGS
-========================= */
-function loadSettings() {
-    db.ref("settings").on("value",snap=>{
-        const c=snap.val()||{};
-        if(c.siteTitle){$("loginTitle").textContent=c.siteTitle;$("sideTitle").textContent=c.siteTitle;document.title=c.siteTitle;}
-        if(c.logoUrl){
-            const img=`<img src="${esc(c.logoUrl)}" class="w-full h-full rounded-xl object-cover">`;
-            $("sideLogo").innerHTML=img; $("loginLogo").innerHTML=img;
+                    // Lưu thông tin người dùng lên Firebase Realtime Database
+                    await db.ref('users/' + user.uid).set({
+                        fullname: fullname,
+                        email: email,
+                        role: "customer",
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+
+                    alert("Đăng ký tài khoản khách hàng thành công!");
+                } else {
+                    const persistence = rememberMe 
+                        ? firebase.auth.Auth.Persistence.LOCAL 
+                        : firebase.auth.Auth.Persistence.SESSION;
+                    
+                    await auth.setPersistence(persistence);
+                    await auth.signInWithEmailAndPassword(email, password);
+                }
+            } catch (error) {
+                alert("Lỗi Firebase: " + error.message);
+            }
         }
-        if(c.bgUrl) document.body.style.backgroundImage=`url('${c.bgUrl}')`,document.body.style.backgroundSize="cover",document.body.style.backgroundAttachment="fixed";
-        if(c.primaryColor){
-            document.documentElement.style.setProperty("--brand",c.primaryColor);
-            document.querySelectorAll(".bg-brand-700").forEach(el=>el.style.backgroundColor=c.primaryColor);
+
+        // LẮNG NGHE TRẠNG THÁI ĐĂNG NHẬP
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // Lấy thông tin phân quyền từ Realtime Database
+                const snapshot = await db.ref('users/' + user.uid).once('value');
+                let userData = snapshot.val();
+
+                // Nếu tài khoản Admin tạo từ Console Firebase chưa có dữ liệu node
+                if (!userData) {
+                    const isAdminEmail = user.email.toLowerCase().includes('admin');
+                    userData = {
+                        fullname: user.email.split('@')[0],
+                        role: isAdminEmail ? 'admin' : 'customer'
+                    };
+                }
+
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                
+                document.getElementById('user-name').innerText = userData.fullname || user.email.split('@')[0];
+                document.getElementById('user-role-badge').innerText = userData.role;
+
+                // Phân quyền hiển thị giao diện
+                if (userData.role === 'admin') {
+                    document.getElementById('admin-role-switcher').classList.remove('hidden');
+                    switchRole('admin');
+                } else {
+                    document.getElementById('admin-role-switcher').classList.add('hidden');
+                    switchRole(userData.role);
+                }
+
+                resetInactivityTimer();
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('app-screen').classList.add('hidden');
+                if (inactivityTimer) clearTimeout(inactivityTimer);
+            }
+        });
+
+        // ĐĂNG XUẤT TÀI KHOẢN
+        function logoutUser() {
+            auth.signOut();
         }
-        if($("settingTitle")){$("settingTitle").value=c.siteTitle||"";$("settingLogo").value=c.logoUrl||"";$("settingBg").value=c.bgUrl||"";$("settingColor").value=c.primaryColor||"#087f5b";$("settingColorText").value=c.primaryColor||"#087F5B";}
-    });
-}
-function saveSettings(e) {
-    e.preventDefault();
-    if(currentUser!==ADMIN_USERNAME) return;
-    const data={siteTitle:$("settingTitle").value.trim(),logoUrl:$("settingLogo").value.trim(),bgUrl:$("settingBg").value.trim(),primaryColor:$("settingColor").value};
-    db.ref("settings").set(data).then(()=>toast("Đã lưu cài đặt toàn hệ thống.")).catch(err=>toast("Không thể lưu: "+err.message,"error"));
-}
 
-/* =========================
-   INIT
-========================= */
-document.addEventListener("DOMContentLoaded",()=>{
-    $("orderDate").value=isoToday();
-    $("refDate").value=isoToday();
-    $("breedPrice").dataset.auto="1";
-    updatePriceAndHatch();
-    $("settingColor")?.addEventListener("input",e=>$("settingColorText").value=e.target.value.toUpperCase());
-    $("settingColorText")?.addEventListener("input",e=>{if(/^#[0-9A-F]{6}$/i.test(e.target.value))$("settingColor").value=e.target.value;});
-    loadSettings();
-    if(currentUser) enterApp();
-});
-</script>
+        // CHUYỂN ĐỔI VIEW DÀNH CHO ADMIN
+        function switchRole(role) {
+            document.getElementById('view-admin').classList.add('hidden');
+            document.getElementById('view-owner').classList.add('hidden');
+            document.getElementById('view-customer').classList.add('hidden');
 
-<style>
-.label{display:block;font-size:.875rem;font-weight:600;color:#475569;margin-bottom:.375rem}
-.field{width:100%;padding:.68rem .8rem;border:1px solid #e2e8f0;border-radius:.75rem;background:#fff}
-.field:focus{border-color:#46bd94;box-shadow:0 0 0 3px rgba(70,189,148,.14)}
-</style>
-</body>
-<!-- THANH MENU DƯỚI DÀNH CHO ĐIỆN THOẠI -->
-<!-- THANH MENU DƯỚI DÀNH CHO ĐIỆN THOẠI -->
-<nav class="bottom-nav">
-  <a href="#" class="bottom-nav-item active">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-    <span>Tổng quan</span>
-  </a>
-  <a href="#" class="bottom-nav-item">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75M10.5 3v1.5m3 0V3m-6 0v1.5M3.75 7.5h16.5M3.75 21h16.5a1.5 1.5 0 0 0 1.5-1.5V7.5a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 7.5v12a1.5 1.5 0 0 0 1.5 1.5Z" /></svg>
-    <span>Đơn hàng</span>
-  </a>
-  <a href="#" class="bottom-nav-item">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
-    <span>Lịch nở</span>
-  </a>
-  <a href="#" class="bottom-nav-item">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5h16.5a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H3.75A1.5 1.5 0 0 1 2.25 15V6a1.5 1.5 0 0 1 1.5-1.5Z" /></svg>
-    <span>Công nợ</span>
-  </a>
-  <a href="#" class="bottom-nav-item">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
-    <span>Khác</span>
-  </a>
-</nav>
+            const tabs = ['admin', 'owner', 'customer'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) el.className = "flex-1 py-1.5 rounded-lg text-center text-slate-500 hover:text-slate-800 transition";
+            });
 
-<script>
-  // 1. CẤU HÌNH TỰ ĐỘNG ĐĂNG XUẤT SAU 1 PHÚT (60.000 ms)
-  const INACTIVE_TIME = 60 * 1000; 
-  let timeoutTimer;
+            const targetView = document.getElementById(`view-${role}`);
+            if (targetView) targetView.classList.remove('hidden');
 
-  function resetTimer() {
-    clearTimeout(timeoutTimer);
-    // Nếu người dùng đang đăng nhập thì mới đếm ngược
-    if (localStorage.getItem("isLoggedIn") === "true") {
-      timeoutTimer = setTimeout(logoutUser, INACTIVE_TIME);
-    }
-  }
-
-  // Bắt các sự kiện thao tác của người dùng để tính lại thời gian 1 phút
-  window.onload = function() {
-    document.onmousemove = resetTimer;
-    document.onkeypress = resetTimer;
-    document.ontouchstart = resetTimer;
-    document.onclick = resetTimer;
-    document.onscroll = resetTimer;
-    
-    checkSavedAccount(); // Kiểm tra tài khoản đã lưu
-    resetTimer();
-  };
-
-  // 2. HÀM TỰ ĐỘNG ĐĂNG XUẤT
-  function logoutUser() {
-    localStorage.setItem("isLoggedIn", "false");
-    
-    // Nếu người dùng KHÔNG tích chọn "Ghi nhớ", xóa luôn tài khoản/mật khẩu
-    if (localStorage.getItem("remember") !== "true") {
-      localStorage.removeItem("savedUser");
-      localStorage.removeItem("savedPass");
-    }
-    
-    alert("Hệ thống tự động đăng xuất do 1 phút không có thao tác để bảo mật dữ liệu!");
-    location.reload(); // Tải lại trang để về màn hình đăng nhập
-  }
-
-  // 3. HÀM LƯU THÔNG TIN KHI BẤM NÚT "ĐĂNG NHẬP"
-  function saveAccountOnLogin(usernameInput, passwordInput) {
-    const isRemember = document.getElementById("rememberMe").checked;
-    localStorage.setItem("isLoggedIn", "true");
-
-    if (isRemember) {
-      localStorage.setItem("remember", "true");
-      localStorage.setItem("savedUser", usernameInput);
-      localStorage.setItem("savedPass", passwordInput);
-    } else {
-      localStorage.setItem("remember", "false");
-      localStorage.removeItem("savedUser");
-      localStorage.removeItem("savedPass");
-    }
-  }
-
-  // 4. TỰ ĐỘNG DIỀN TÀI KHOẢN NẾU ĐÃ LƯU TRƯỚC ĐÓ
-  function checkSavedAccount() {
-    const savedUser = localStorage.getItem("savedUser");
-    const savedPass = localStorage.getItem("savedPass");
-    const isRemember = localStorage.getItem("remember") === "true";
-
-    // Đã cập nhật đúng ID thực tế trong file index.html của anh
-    const userInput = document.getElementById("loginUsername");
-    const passInput = document.getElementById("loginPassword");
-    const rememberCheckbox = document.getElementById("rememberMe");
-
-    if (isRemember && savedUser && savedPass) {
-      if (userInput) userInput.value = savedUser;
-      if (passInput) passInput.value = savedPass;
-      if (rememberCheckbox) rememberCheckbox.checked = true;
-    }
-  }
-</script>
-<!-- THANH MENU DƯỚI ĐÁY -->
-<nav class="bottom-nav">
-  <a href="javascript:void(0)" onclick="switchTab('overview')" class="bottom-nav-item active" id="btn-overview">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-    <span>Tổng quan</span>
-  </a>
-  <a href="javascript:void(0)" onclick="switchTab('orders')" class="bottom-nav-item" id="btn-orders">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75M10.5 3v1.5m3 0V3m-6 0v1.5M3.75 7.5h16.5M3.75 21h16.5a1.5 1.5 0 0 0 1.5-1.5V7.5a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 7.5v12a1.5 1.5 0 0 0 1.5 1.5Z" /></svg>
-    <span>Đơn hàng</span>
-  </a>
-  <a href="javascript:void(0)" onclick="switchTab('hatch')" class="bottom-nav-item" id="btn-hatch">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
-    <span>Lịch nở</span>
-  </a>
-  <a href="javascript:void(0)" onclick="switchTab('debts')" class="bottom-nav-item" id="btn-debts">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5h16.5a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H3.75A1.5 1.5 0 0 1 2.25 15V6a1.5 1.5 0 0 1 1.5-1.5Z" /></svg>
-    <span>Công nợ</span>
-  </a>
-  <a href="javascript:void(0)" onclick="switchTab('more')" class="bottom-nav-item" id="btn-more">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
-    <span>Khác</span>
-  </a>
-</nav>
-<script>
-  function switchTab(tabName) {
-    // 1. Đổi màu nút active
-    document.querySelectorAll('.bottom-nav-item').forEach(item => {
-      item.classList.remove('active');
-    });
-    
-    const activeBtn = document.getElementById('btn-' + tabName);
-    if (activeBtn) activeBtn.classList.add('active');
-
-    // 2. Ẩn tất cả tab và chỉ hiện tab được chọn theo ID
-    const tabs = ['overview', 'orders', 'hatch', 'debts', 'more'];
-    tabs.forEach(tab => {
-      const el = document.getElementById('tab-' + tab);
-      if (el) {
-        el.style.display = (tab === tabName) ? 'block' : 'none';
-      }
-    });
-  }
-</script>
+            const activeTab = document.getElementById(`tab-${role}`);
+            if (activeTab) activeTab.className = "flex-1 py-1.5 rounded-lg text-center bg-white text-emerald-700 shadow-sm transition font-bold";
+        }
+    </script>
 </body>
 </html>
