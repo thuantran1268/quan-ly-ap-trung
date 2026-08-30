@@ -2,34 +2,49 @@
 <html lang="vi">
 <head>
     <style>
-  /* Thanh điều hướng cố định dưới chân màn hình trên Điện thoại */
-  .bottom-nav {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background-color: #ffffff;
-    border-top: 1px solid #e5e7eb;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-    z-index: 99999;
-    justify-content: space-around;
-    align-items: center;
-  }
+.bottom-nav {
+  display: none; /* Mặc định ẩn trên máy tính */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 999999 !important; /* Nổi lên trên cùng */
+  pointer-events: auto !important; /* Nhận thao tác bấm */
+  justify-content: space-around;
+  align-items: center;
+}
 
-  .bottom-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #6b7280;
-    text-decoration: none;
-    font-size: 11px;
-    font-family: sans-serif;
-    flex: 1;
-    height: 100%;
+.bottom-nav-item {
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 11px;
+  font-family: sans-serif;
+  flex: 1;
+  height: 100%;
+}
   }
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 11px;
+  font-family: sans-serif;
+  flex: 1;
+  height: 100%;
+}
 
   .bottom-nav-item.active {
     color: #059669;
@@ -1486,16 +1501,17 @@ document.addEventListener("DOMContentLoaded",()=>{
     <span>Khác</span>
   </a>
 </nav>
-
 <script>
   function switchTab(tabName) {
+    // 1. Đổi màu nút active
     document.querySelectorAll('.bottom-nav-item').forEach(item => {
       item.classList.remove('active');
     });
-
+    
     const activeBtn = document.getElementById('btn-' + tabName);
     if (activeBtn) activeBtn.classList.add('active');
 
+    // 2. Ẩn tất cả tab và chỉ hiện tab được chọn theo ID
     const tabs = ['overview', 'orders', 'hatch', 'debts', 'more'];
     tabs.forEach(tab => {
       const el = document.getElementById('tab-' + tab);
