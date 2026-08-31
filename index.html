@@ -13,7 +13,19 @@
     :root { --xanh: #2563eb; --xanh-nhat: #eff6ff; --den: #1f2937; --do: #dc2626; --xanh-la: #16a34a; --cam: #f59e0b; --tim: #8b5cf6; }
     body { background: #f8fafc; color: var(--den); padding-bottom: 60px; }
 
-    .thanh-dn { background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.08); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index:99; }
+    .thanh-dn { 
+      background: #fff; 
+      box-shadow: 0 2px 6px rgba(0,0,0,.08); 
+      padding: 8px 16px;       /* ✅ Giảm padding → thanh NGẮN LẠI */
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      position: sticky;         /* ✅ LUÔN DÍNH TRÊN CÙNG khi cuộn — đúng yêu cầu! */
+      top: 0; 
+      z-index: 99; 
+      height: 56px;             /* ✅ Đặt chiều cao cố định GỌN GÀNG */
+      min-height: 56px;
+    }
     .thanh-dn h1 { font-size: 18px; color: var(--xanh); display: flex; align-items: center; gap: 8px; }
     .thanh-phai { display: flex; align-items: center; gap: 14px; }
     .chuong-thongbao { position: relative; font-size: 22px; cursor: pointer; color: var(--xanh); }
@@ -75,6 +87,7 @@
         /* ==== BẢNG DANH SÁCH — KẺ Ô RÕ RÀNG + TỰ XUỐNG DÒNG ==== */
     .danh-sach {
       width: 100%;
+      min-width: 1000px;  /* ✅ Thêm dòng này — Bảng tối thiểu 1000px rộng */
       border-collapse: collapse;
       margin-top: 12px;
       font-size: 13px;
@@ -146,13 +159,74 @@
     .danh-sach td.xanh-la { color: #16a34a; font-weight: 600; }
 
     /* ==== TRÊN MÀN HÌNH NHỎ — Có thanh cuộn ngang ==== */
+        /* ==== TRÊN ĐIỆN THOẠI — Bảng chuyển thành DÀNH DỌC dễ xem ==== */
     @media (max-width: 768px) {
-      .danh-sach { 
-        display: block; 
-        overflow-x: auto;
+      .danh-sach {
+        display: block;
+        width: 100%;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
       }
-      .khung-thongbao { width: calc(100% - 32px); right: 16px; }
+
+      /* Ẩn tiêu đề cột trên điện thoại */
+      .danh-sach thead {
+        display: none;
+      }
+
+      /* Mỗi hàng thành 1 khối viền riêng */
+      .danh-sach tbody tr {
+        display: block;
+        width: 100%;
+        border: 2px solid #93c5fd;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      }
+
+      /* Mỗi ô thành 1 dòng có nhãn + giá trị */
+      .danh-sach td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        border: none;
+        border-bottom: 1px dashed #dbeafe;
+        text-align: right;
+        font-size: 14px;
+      }
+
+      /* Thêm nhãn bên trái mỗi ô */
+      .danh-sach td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #1d4ed8;
+        text-align: left;
+        flex-shrink: 0;
+        margin-right: 10px;
+      }
+
+      /* Ô cuối cùng bỏ đường gạch dưới */
+      .danh-sach td:last-child {
+        border-bottom: none;
+      }
+
+      /* Nút thông báo */
+      .khung-thongbao {
+        width: calc(100% - 32px);
+        right: 16px;
+      }
     }
+    /* ==== Định dạng chung cho TOÀN BỘ TRANG ==== */
+body { 
+  background: #f8fafc; 
+  color: var(--den); 
+  padding-bottom: 60px; 
+  padding-top: 8px;  /* ✅ Tạo khoảng trống KHÔNG BỊ CHE sau thanh */
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
   </style>
 </head>
 <body>
@@ -160,21 +234,38 @@
   <header class="thanh-dn">
     <h1><i class="fas fa-egg icon-dong"></i> Quản Lý Đơn Hàng Gà Con</h1>
     <div class="thanh-phai">
-      <div class="chuong-thongbao" onclick="hienThongBao()">
-        <i class="fas fa-bell"></i>
-        <span class="so-thongbao" id="so-thongbao">0</span>
-      </div>
-      <span id="email-nguoi-dung" style="font-size:14px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-      <button class="nut do nho" id="nut-dang-xuat" style="display:none;" onclick="dangXuat()">Đăng xuất</button>
+        <button class="nut nho" id="nut-cai-dat" onclick="hienCaiDat()" title="Cài đặt hiển thị">⚙️</button>
+        <div class="chuong-thongbao" onclick="hienThongBao()">
+            <i class="fas fa-bell"></i>
+            <span class="so-thongbao" id="so-thongbao">0</span>
+        </div>
+        <span id="email-nguoi-dung" style="font-size:14px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+        <button class="nut do nho" id="nut-dang-xuat" style="display:none;" onclick="dangXuat()">Đăng xuất</button>
     </div>
-  </header>
+</header>
 
-  <div class="khung-thongbao" id="khung-thongbao">
+<!-- ===== KHUNG CÀI ĐẶT HIỂN THỊ ===== -->
+<div class="khung-thongbao" id="khung-cai-dat" style="width: 320px; top: 52px;">
+    <h4><i class="fas fa-sliders-h"></i> Tùy chỉnh hiển thị</h4>
+    <div style="padding: 8px 0;">
+        <label style="display:block; margin:12px 0 4px; font-size:14px; font-weight:500;">🔤 Kích thước chữ: <span id="gia-tri-chu">14</span>px</label>
+        <input type="range" id="thay-doi-chu" min="12" max="18" value="14" 
+            style="width:100%;" oninput="capNhatKichThuocChu(this.value)">
+        
+        <label style="display:block; margin:16px 0 4px; font-size:14px; font-weight:500;">↔️ Độ rộng bảng: <span id="gia-tri-rong">Bình thường</span></label>
+        <input type="range" id="thay-doi-rong" min="1" max="3" value="2" 
+            style="width:100%;" oninput="capNhatDoRongBang(this.value)">
+        
+        <button class="nut nho" style="width:100%; margin-top:16px;" onclick="datLaiMacDinh()">🔄 Đặt lại mặc định</button>
+    </div>
+</div>
+
+  <div class="khung-thongbao" id="khung-thongbao"> style="top: 52px;">  <!-- ✅ THÊM style="top: 52px;" -->
     <h4><i class="fas fa-bell icon-cam"></i> Đơn hàng sắp giao</h4>
     <div id="danh-sach-thongbao"></div>
   </div>
 
-  <div class="khung" id="khung-dang-nhap">
+    <div class="khung" id="khung-dang-nhap">
     <h2><i class="fas fa-lock"></i> Đăng nhập hệ thống</h2>
     <div class="thong-bao" id="tb-dn"></div>
     <div class="icon-input">
@@ -183,7 +274,10 @@
     </div>
     <div class="icon-input">
       <label><i class="fas fa-key icon-cam"></i> Mật khẩu</label>
-      <input type="password" id="matkhau-dn" placeholder="Nhập mật khẩu" />
+      <div style="position:relative;">
+        <input type="password" id="matkhau-dn" placeholder="Nhập mật khẩu" style="width:100%; padding-right:45px; box-sizing:border-box;" />
+        <span toggle="#matkhau-dn" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#666; font-size:18px;">👁️</span>
+      </div>
     </div>
     <button class="nut xanh" onclick="dangNhap()">Đăng nhập</button>
     <div class="chuyen-form">Chưa có tài khoản? <a onclick="hienDangKy()">Đăng ký chủ lò</a></div>
@@ -207,16 +301,21 @@
     </div>
     <div class="icon-input">
       <label><i class="fas fa-key icon-cam"></i> Mật khẩu <span style="color:red">*</span> (tối thiểu 6 ký tự)</label>
-      <input type="password" id="matkhau-dk" placeholder="Nhập mật khẩu" />
+      <div style="position:relative;">
+        <input type="password" id="matkhau-dk" placeholder="Nhập mật khẩu" style="width:100%; padding-right:45px; box-sizing:border-box;" />
+        <span toggle="#matkhau-dk" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#666; font-size:18px;">👁️</span>
+      </div>
     </div>
     <div class="icon-input">
       <label><i class="fas fa-redo icon-tim"></i> Xác nhận mật khẩu <span style="color:red">*</span></label>
-      <input type="password" id="xacnhan-matkhau" placeholder="Nhập lại mật khẩu" />
+      <div style="position:relative;">
+        <input type="password" id="xacnhan-matkhau" placeholder="Nhập lại mật khẩu" style="width:100%; padding-right:45px; box-sizing:border-box;" />
+        <span toggle="#xacnhan-matkhau" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#666; font-size:18px;">👁️</span>
+      </div>
     </div>
     <button class="nut xanh-la" onclick="dangKy()">Đăng ký chủ lò</button>
     <div class="chuyen-form">Đã có tài khoản? <a onclick="hienDangNhap()">Đăng nhập</a></div>
   </div>
-
   <main class="noi-dung" id="noi-dung-chinh">
     <div class="thong-tin-tk" id="thong-tin-tk">
       <strong>👤 Thông tin tài khoản</strong><br/>
@@ -521,7 +620,6 @@ function taiDanhSachDonHang() {
     console.log('Chưa có UID, dừng tải dữ liệu');
     return;
   }
-
   db.ref('nguoi_dung/'+UID+'/don_hang').on('value', (snap) => {
     const ds = snap.val() || {};
     console.log('Dữ liệu đơn hàng nhận được:', ds);
@@ -531,17 +629,14 @@ function taiDanhSachDonHang() {
       key,
       ...dh
     }));
-
     // ✅ SẮP XẾP: Ngày giao SẮP ĐẾM lên TRÊN, xa hơn xuống DƯỚI
     mangDonHang.sort((a, b) => {
       const ngayA = a.ngay_giao_du_kien || '9999-12-31';
       const ngayB = b.ngay_giao_du_kien || '9999-12-31';
       return new Date(ngayA) - new Date(ngayB); // Ngày sớm lên trước
     });
-
     // ==== BƯỚC 2: Lưu dữ liệu vào biến toàn cục để lọc tìm kiếm ====
     window.danhSachDonHangGoc = mangDonHang;
-
     // ==== BƯỚC 3: Hiển thị danh sách (sẽ gọi lại hàm lọc) ====
     locDanhSachDonHang();
   });
@@ -554,10 +649,8 @@ function locDanhSachDonHang() {
   const homNay = new Date(); 
   homNay.setHours(0,0,0,0);
   const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
-
   let tongTienCoc = 0, tongCongNo = 0;
   let dsSapGiao = [];
-
   tbody.innerHTML = '';
 
   // Lấy danh sách gốc hoặc mảng rỗng
@@ -573,7 +666,6 @@ function locDanhSachDonHang() {
   ketQuaLoc.forEach(dh => {
     tongTienCoc += dh.tien_coc || 0;
     if ((dh.con_no || 0) > 0) tongCongNo += dh.con_no;
-
     const ngayDat = fmtNgay(dh.ngay_dat);
     const ngayAp = fmtNgay(dh.ngay_bat_dau_ap);
     const ngayGiao = fmtNgay(dh.ngay_giao_du_kien);
@@ -607,19 +699,19 @@ function locDanhSachDonHang() {
       trangThaiText = '⏳ Chưa trả đủ'; trangThaiClass = 'do';
     }
 
-    // Thêm dòng vào bảng
+    // Thêm dòng vào bảng — ✅ ĐÃ THÊM data-label CHO ĐIỆN THOẠI
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><strong>${dh.ten_khach}</strong></td>
-      <td>${(dh.so_luong || 0).toLocaleString('vi-VN')}</td>
-      <td>${ngayDat}</td>
-      <td class="tim">${ngayAp}</td>
-      <td>${ngayGiao}</td>
-      <td>${(dh.thanh_tien||0).toLocaleString('vi')}</td>
-      <td>${(dh.tien_coc||0).toLocaleString('vi')}</td>
-      <td class="${dh.con_no > 0 ? 'do' : 'xanh-la'}">${(dh.con_no||0).toLocaleString('vi')}</td>
-      <td class="${trangThaiClass}">${trangThaiText}</td>
-      <td>
+      <td data-label="Tên KH"><strong>${dh.ten_khach}</strong></td>
+      <td data-label="Số lượng">${(dh.so_luong || 0).toLocaleString('vi-VN')}</td>
+      <td data-label="Ngày đặt">${ngayDat}</td>
+      <td data-label="Ngày ấp" class="tim">${ngayAp}</td>
+      <td data-label="Ngày giao">${ngayGiao}</td>
+      <td data-label="Thành tiền">${(dh.thanh_tien||0).toLocaleString('vi')}</td>
+      <td data-label="Tiền cọc">${(dh.tien_coc||0).toLocaleString('vi')}</td>
+      <td data-label="Còn nợ" class="${dh.con_no > 0 ? 'do' : 'xanh-la'}">${(dh.con_no||0).toLocaleString('vi')}</td>
+      <td data-label="Trạng thái" class="${trangThaiClass}">${trangThaiText}</td>
+      <td data-label="Thao tác">
         <span class="sua" onclick="suaDonHang('${dh.key}')" title="Sửa đơn"><i class="fas fa-edit"></i></span>
         <span class="da-giao" onclick="danhDauDaGiao('${dh.key}')" title="Đã giao"><i class="fas fa-check-circle"></i></span>
         <span class="xoa" onclick="xoaDonHang('${dh.key}')" title="Xóa đơn"><i class="fas fa-trash"></i></span>
@@ -627,7 +719,6 @@ function locDanhSachDonHang() {
     `;
     tbody.appendChild(tr);
   });
-
   // Cập nhật tóm tắt
   document.getElementById('tong-tien-coc').textContent = tongTienCoc.toLocaleString('vi') + ' đ';
   document.getElementById('tong-cong-no').textContent = tongCongNo.toLocaleString('vi') + ' đ';
@@ -807,27 +898,24 @@ TỔNG CỘNG:
       document.getElementById('tong-chu-lo').textContent = tongChuLo;
     }
   // ===== ADMIN XEM DANH SÁCH ĐƠN HÀNG CỦA CHỦ LÒ =====
+// ===== ADMIN XEM DANH SÁCH ĐƠN HÀNG CỦA CHỦ LÒ =====
 async function xemDonHangCuaChuLo(uidChuLo) {
   const ttSnap = await db.ref('nguoi_dung/' + uidChuLo).once('value');
   const tt = ttSnap.val() || {};
   const ds = tt.don_hang || {};
-
   if (Object.keys(ds).length === 0) {
     alert('❌ Chủ lò này chưa có đơn hàng nào!');
     return;
   }
-
   const homNay = new Date(); 
   homNay.setHours(0,0,0,0);
   const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
-
   let noiDung = `📋 DANH SÁCH ĐƠN HÀNG CỦA: ${tt.email || 'Chưa có email'}\n`;
   noiDung += `📞 Điện thoại: ${tt.dien_thoai || '—'}\n`;
   noiDung += `🏠 Địa chỉ: ${tt.dia_chi || '—'}\n`;
   noiDung += `═══════════════════════════════════════════════\n\n`;
   
   let stt = 1, tongTien = 0, tongConNo = 0;
-
   Object.entries(ds).reverse().forEach(([key, dh]) => {
     const ngayDat = fmtNgay(dh.ngay_dat);
     const ngayAp = fmtNgay(dh.ngay_bat_dau_ap);
@@ -836,10 +924,8 @@ async function xemDonHangCuaChuLo(uidChuLo) {
     const conNo = dh.con_no || 0;
     tongTien += thanhTien;
     if (conNo > 0) tongConNo += conNo;
-
     let trangThai = dh.trang_thai === 'da-giao' ? '✅ Đã giao' : 
                     conNo <= 0 ? '💵 Đã trả đủ' : '⏳ Chưa trả đủ';
-
     noiDung += `${stt}. Khách: ${dh.ten_khach || '—'}\n`;
     noiDung += `   Số lượng: ${(dh.so_luong || 0).toLocaleString('vi-VN')} con\n`;
     noiDung += `   Ngày đặt: ${ngayDat} | Ngày ấp: ${ngayAp} | Ngày giao: ${ngayGiao}\n`;
@@ -848,13 +934,76 @@ async function xemDonHangCuaChuLo(uidChuLo) {
     noiDung += `───────────────────────────────────────────────\n`;
     stt++;
   });
-
   noiDung += `\n📊 TỔNG CỘNG:\n`;
   noiDung += `   Tổng thành tiền: ${tongTien.toLocaleString('vi')} đ\n`;
   noiDung += `   Tổng công nợ: ${tongConNo.toLocaleString('vi')} đ\n`;
-
   alert(noiDung);
 }
+
+// ===== NÚT CON MẮT HIỆN / ẨN MẬT KHẨU =====
+document.addEventListener('click', function(e) {
+  const nutConMat = e.target.closest('span[toggle]');
+  if (nutConMat) {
+    const idInput = nutConMat.getAttribute('toggle').substring(1);
+    const input = document.getElementById(idInput);
+    if (input) {
+      if (input.type === 'password') {
+        input.type = 'text';
+        nutConMat.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        nutConMat.textContent = '👁️';
+      }
+    }
+  }
+});
+// ===== CÀI ĐẶT HIỂN THỊ =====
+function hienCaiDat() {
+  document.getElementById('khung-cai-dat').classList.toggle('hien');
+}
+
+function capNhatKichThuocChu(giaTri) {
+  document.getElementById('gia-tri-chu').textContent = giaTri;
+  document.body.style.fontSize = giaTri + 'px';
+  localStorage.setItem('kich_thuoc_chu', giaTri);
+}
+
+function capNhatDoRongBang(giaTri) {
+  const bang = document.querySelector('.danh-sach');
+  const hienThi = ['Thu hẹp', 'Bình thường', 'Rộng hơn'][giaTri-1];
+  document.getElementById('gia-tri-rong').textContent = hienThi;
+  const doRongToiThieu = ['700px', '900px', '1100px'][giaTri-1];
+  if (bang) bang.style.minWidth = doRongToiThieu;
+  localStorage.setItem('do_rong_bang', giaTri);
+}
+
+function taiCaiDatDaLuu() {
+  const kichThuocChu = localStorage.getItem('kich_thuoc_chu') || 14;
+  document.getElementById('thay-doi-chu').value = kichThuocChu;
+  capNhatKichThuocChu(kichThuocChu);
+  
+  const doRongBang = localStorage.getItem('do_rong_bang') || 2;
+  document.getElementById('thay-doi-rong').value = doRongBang;
+  capNhatDoRongBang(doRongBang);
+}
+
+function datLaiMacDinh() {
+  localStorage.removeItem('kich_thuoc_chu');
+  localStorage.removeItem('do_rong_bang');
+  taiCaiDatDaLuu();
+  alert('✅ Đã đặt lại về mặc định!');
+}
+
+// Đóng khung khi nhấn ra ngoài
+document.addEventListener('click', (e) => {
+  const khung = document.getElementById('khung-cai-dat');
+  const nut = document.getElementById('nut-cai-dat');
+  if (khung && !khung.contains(e.target) && !nut.contains(e.target)) {
+    khung.classList.remove('hien');
+  }
+});
+
+window.addEventListener('load', taiCaiDatDaLuu);
 </script>
 </body>
 </html>
