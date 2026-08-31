@@ -1,467 +1,860 @@
 <!DOCTYPE html>
-<html lang="vi" class="h-full bg-slate-50">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Hệ Thống Quản Lý Lò Ấp Trứng</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    <!-- Firebase SDK (v9+ Compat Mode) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Lý Đơn Hàng Gà Con</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    :root { --xanh: #2563eb; --xanh-nhat: #eff6ff; --den: #1f2937; --do: #dc2626; --xanh-la: #16a34a; --cam: #f59e0b; --tim: #8b5cf6; }
+    body { background: #f8fafc; color: var(--den); padding-bottom: 60px; }
 
-    <style>
-        .pt-safe { padding-top: env(safe-area-inset-top, 16px); }
-        .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 76px); }
-        .bottom-safe { bottom: env(safe-area-inset-bottom, 0px); }
-        * { -webkit-tap-highlight-color: transparent; }
-    </style>
+    .thanh-dn { background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.08); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index:99; }
+    .thanh-dn h1 { font-size: 18px; color: var(--xanh); display: flex; align-items: center; gap: 8px; }
+    .thanh-phai { display: flex; align-items: center; gap: 14px; }
+    .chuong-thongbao { position: relative; font-size: 22px; cursor: pointer; color: var(--xanh); }
+    .so-thongbao { position: absolute; top: -8px; right: -8px; background: var(--do); color: #fff; font-size: 11px; font-weight: bold; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+    .nut { padding: 10px 16px; border: none; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: 500; transition: all .2s; }
+    .nut:hover { opacity: .9; transform: translateY(-1px); }
+    .nut.xanh { background: var(--xanh); color: #fff; }
+    .nut.do { background: var(--do); color: #fff; }
+    .nut.xanh-la { background: var(--xanh-la); color: #fff; }
+    .nut.cam { background: var(--cam); color: #fff; }
+    .nut.tim { background: var(--tim); color: #fff; }
+    .nut.nho { padding: 6px 12px; font-size: 13px; }
+
+    .khung-thongbao { position: fixed; top: 60px; right: 16px; width: 340px; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.15); padding: 16px; z-index: 999; display: none; max-height: 400px; overflow-y: auto; }
+    .khung-thongbao.hien { display: block; }
+    .khung-thongbao h4 { margin-bottom: 10px; color: var(--cam); }
+    .item-thongbao { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+
+    .khung { max-width: 420px; margin: 20px auto; padding: 24px; background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .khung h2 { text-align: center; margin-bottom: 20px; color: var(--xanh); font-size: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .khung label { font-size: 14px; font-weight: 500; color: #4b5563; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; margin-top: 12px; }
+    .khung input { width: 100%; padding: 12px 12px 12px 40px; margin: 4px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+    .khung .icon-input { position: relative; }
+    .khung .icon-input i { position: absolute; left: 12px; top: 38px; color: #9ca3af; font-size: 18px; }
+    .khung .nut { width: 100%; margin-top: 16px; }
+    .chuyen-form { text-align: center; margin-top: 16px; font-size: 14px; }
+    .chuyen-form a { color: var(--xanh); cursor: pointer; text-decoration: underline; }
+    .thong-bao { padding: 10px; border-radius: 8px; margin-bottom: 12px; display: none; font-size: 14px; }
+    .thong-bao.loi { background: #fee2e2; color: #b91c1c; display: block; }
+    .thong-bao.thanh-cong { background: #dcfce7; color: #166534; display: block; }
+
+    .noi-dung { display: none; padding: 16px; max-width: 1000px; margin: 0 auto; }
+    .noi-dung.hien { display: block; }
+    .the { background: #fff; border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+    .the h3 { font-size: 16px; margin-bottom: 16px; color: #374151; display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+    .icon-dong { color: var(--xanh); }
+    .icon-do { color: var(--do); }
+    .icon-cam { color: var(--cam); }
+    .icon-xanh-la { color: var(--xanh-la); }
+    .icon-tim { color: var(--tim); }
+
+    .form-hang-doc { display: flex; flex-direction: column; gap: 4px; }
+    .form-hang-doc label { font-size: 14px; font-weight: 500; color: #4b5563; display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .form-hang-doc input { width: 100%; padding: 12px 12px 12px 42px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+    .form-hang-doc .khung-input { position: relative; }
+    .form-hang-doc .khung-input i { position: absolute; left: 14px; top: 45px; color: #9ca3af; font-size: 18px; }
+    .ghi-chu { font-size: 13px; color: #6b7280; margin-top: 4px; padding-left: 42px; }
+
+    .hang-nut { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .hang-nut .nut { flex: 1; min-width: 100px; font-size: 14px; }
+
+    .tom-tat { display: flex; flex-wrap: wrap; gap: 16px; }
+    .tom-tat .muc { flex: 1; min-width: 150px; text-align: center; padding: 12px; border-radius: 10px; background: var(--xanh-nhat); }
+    .tom-tat .muc.do { background: #fef2f2; }
+    .tom-tat .muc .so { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .tom-tat .muc.xanh-la .so { color: var(--xanh-la); }
+    .tom-tat .muc.do .so { color: var(--do); }
+
+        /* ==== BẢNG DANH SÁCH — KẺ Ô RÕ RÀNG + TỰ XUỐNG DÒNG ==== */
+    .danh-sach {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+      background: #fff;
+      border: 2px solid #2563eb;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .danh-sach th,
+    .danh-sach td {
+      padding: 12px 8px;
+      text-align: left;
+      border: 1px solid #93c5fd;
+      vertical-align: middle;
+      white-space: normal;       /* Tự động xuống dòng chữ dài */
+      word-wrap: break-word;     /* Tách chữ dài không bị tràn */
+    }
+
+    .danh-sach th {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      color: #1d4ed8;
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+      text-align: center;
+      border-bottom: 2px solid #2563eb;
+    }
+
+    /* ==== ĐỘ RỘNG TỪNG CỘT — Không bị che chữ ==== */
+    .danh-sach th:nth-child(1),
+    .danh-sach td:nth-child(1) { min-width: 140px; max-width: 180px; }  /* Tên KH */
+
+    .danh-sach th:nth-child(2),
+    .danh-sach td:nth-child(2) { width: 90px; text-align: center; }      /* Số lượng */
+
+    .danh-sach th:nth-child(3),
+    .danh-sach td:nth-child(3) { width: 100px; text-align: center; }     /* Ngày đặt */
+
+    .danh-sach th:nth-child(4),
+    .danh-sach td:nth-child(4) { width: 115px; text-align: center; }     /* Ngày vào trứng — RỘNG HƠN */
+
+    .danh-sach th:nth-child(5),
+    .danh-sach td:nth-child(5) { width: 105px; text-align: center; }      /* Ngày giao */
+
+    .danh-sach th:nth-child(6),
+    .danh-sach td:nth-child(6) { width: 130px; text-align: right; }      /* Thành tiền */
+
+    .danh-sach th:nth-child(7),
+    .danh-sach td:nth-child(7) { width: 110px; text-align: right; }      /* Tiền cọc */
+
+    .danh-sach th:nth-child(8),
+    .danh-sach td:nth-child(8) { width: 110px; text-align: right; }       /* Còn nợ */
+
+    .danh-sach th:nth-child(9),
+    .danh-sach td:nth-child(9) { width: 120px; text-align: center; }      /* Trạng thái */
+
+    .danh-sach th:nth-child(10),
+    .danh-sach td:nth-child(10) { width: 100px; text-align: center; }    /* Thao tác */
+
+    /* ==== MÀU NỀN XEN KỄ DỄ NHÌN ==== */
+    .danh-sach tbody tr:nth-child(odd) { background-color: #fff; }
+    .danh-sach tbody tr:nth-child(even) { background-color: #eff6ff; }
+    .danh-sach tbody tr:hover { background-color: #bfdbfe; }
+
+    /* ==== MÀU CHỮ TRẠNG THÁI ==== */
+    .danh-sach td.do { color: #dc2626; font-weight: 600; }
+    .danh-sach td.xanh-la { color: #16a34a; font-weight: 600; }
+
+    /* ==== TRÊN MÀN HÌNH NHỎ — Có thanh cuộn ngang ==== */
+    @media (max-width: 768px) {
+      .danh-sach { 
+        display: block; 
+        overflow-x: auto;
+      }
+      .khung-thongbao { width: calc(100% - 32px); right: 16px; }
+    }
+  </style>
 </head>
-<body id="app-body" class="h-full text-slate-800 flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-white text-base">
+<body>
 
-    <!-- ==================== AUTH SECTION ==================== -->
-    <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-100 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl border border-slate-100 space-y-4 my-auto">
-            <div class="text-center space-y-1">
-                <div class="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center mx-auto text-xl font-bold shadow-lg shadow-emerald-600/30">
-                    <i class="fa-solid fa-egg"></i>
-                </div>
-                <h2 id="auth-title" class="text-lg font-black text-slate-800 pt-1">Đăng Nhập Hệ Thống</h2>
-                <p class="text-[11px] text-slate-500">Quản lý hệ thống lò ấp trứng thông minh</p>
-            </div>
+  <header class="thanh-dn">
+    <h1><i class="fas fa-egg icon-dong"></i> Quản Lý Đơn Hàng Gà Con</h1>
+    <div class="thanh-phai">
+      <div class="chuong-thongbao" onclick="hienThongBao()">
+        <i class="fas fa-bell"></i>
+        <span class="so-thongbao" id="so-thongbao">0</span>
+      </div>
+      <span id="email-nguoi-dung" style="font-size:14px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+      <button class="nut do nho" id="nut-dang-xuat" style="display:none;" onclick="dangXuat()">Đăng xuất</button>
+    </div>
+  </header>
 
-            <!-- FORM ĐÃ TẮT AUTOFILL -->
-            <form id="auth-form" onsubmit="handleAuth(event)" autocomplete="off" class="space-y-3">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Số điện thoại</label>
-                    <input type="tel" id="phone" required placeholder="0987654321" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
+  <div class="khung-thongbao" id="khung-thongbao">
+    <h4><i class="fas fa-bell icon-cam"></i> Đơn hàng sắp giao</h4>
+    <div id="danh-sach-thongbao"></div>
+  </div>
 
-                <div id="signup-fields" class="space-y-3 hidden">
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Họ và tên chủ lò</label>
-                        <input type="text" id="fullname" placeholder="Nguyễn Văn A" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
+  <div class="khung" id="khung-dang-nhap">
+    <h2><i class="fas fa-lock"></i> Đăng nhập hệ thống</h2>
+    <div class="thong-bao" id="tb-dn"></div>
+    <div class="icon-input">
+      <label><i class="fas fa-envelope icon-dong"></i> Email</label>
+      <input type="email" id="email-dn" placeholder="Nhập email của bạn" />
+    </div>
+    <div class="icon-input">
+      <label><i class="fas fa-key icon-cam"></i> Mật khẩu</label>
+      <input type="password" id="matkhau-dn" placeholder="Nhập mật khẩu" />
+    </div>
+    <button class="nut xanh" onclick="dangNhap()">Đăng nhập</button>
+    <div class="chuyen-form">Chưa có tài khoản? <a onclick="hienDangKy()">Đăng ký chủ lò</a></div>
+    <div class="chuyen-form" style="margin-top:6px; font-size:13px;">Là quản trị viên? <a onclick="hienDangNhapAdmin()">Đăng nhập Admin</a></div>
+  </div>
 
-                    <div>
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Địa chỉ</label>
-                        <input type="text" id="address" placeholder="Xã/Huyện/Tỉnh" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
+  <div class="khung" id="khung-dang-ky" style="display:none;">
+    <h2><i class="fas fa-user-plus icon-xanh-la"></i> Đăng ký tài khoản chủ lò</h2>
+    <div class="thong-bao" id="tb-dk"></div>
+    <div class="icon-input">
+      <label><i class="fas fa-envelope icon-dong"></i> Email <span style="color:red">*</span></label>
+      <input type="email" id="email-dk" placeholder="VD: ab@gmail.com" />
+    </div>
+    <div class="icon-input">
+      <label><i class="fas fa-phone icon-xanh-la"></i> Số điện thoại <span style="color:red">*</span></label>
+      <input type="tel" id="dienthoai-dk" placeholder="VD: 0912345678" />
+    </div>
+    <div class="icon-input">
+      <label><i class="fas fa-map-marker-alt icon-do"></i> Địa chỉ</label>
+      <input type="text" id="diachi-dk" placeholder="Nhập địa chỉ" />
+    </div>
+    <div class="icon-input">
+      <label><i class="fas fa-key icon-cam"></i> Mật khẩu <span style="color:red">*</span> (tối thiểu 6 ký tự)</label>
+      <input type="password" id="matkhau-dk" placeholder="Nhập mật khẩu" />
+    </div>
+    <div class="icon-input">
+      <label><i class="fas fa-redo icon-tim"></i> Xác nhận mật khẩu <span style="color:red">*</span></label>
+      <input type="password" id="xacnhan-matkhau" placeholder="Nhập lại mật khẩu" />
+    </div>
+    <button class="nut xanh-la" onclick="dangKy()">Đăng ký chủ lò</button>
+    <div class="chuyen-form">Đã có tài khoản? <a onclick="hienDangNhap()">Đăng nhập</a></div>
+  </div>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">CS Lò ấp (quả)</label>
-                            <input type="number" id="incubator-capacity" placeholder="10000" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">CS Trang trại (con)</label>
-                            <input type="number" id="farm-capacity" placeholder="5000" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                    </div>
-                </div>
+  <main class="noi-dung" id="noi-dung-chinh">
+    <div class="thong-tin-tk" id="thong-tin-tk">
+      <strong>👤 Thông tin tài khoản</strong><br/>
+      Email: <span id="tt-email">—</span> | Điện thoại: <span id="tt-dienthoai">—</span><br/>
+      Địa chỉ: <span id="tt-diachi">Chưa cập nhật</span>
+    </div>
 
-                <div>
-                    <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Mật khẩu</label>
-                    <input type="password" id="password" required placeholder="••••••••" autocomplete="new-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <div id="field-confirm-password" class="hidden">
-                    <label class="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Xác nhận mật khẩu</label>
-                    <input type="password" id="confirm-password" placeholder="••••••••" autocomplete="new-password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <div id="remember-box" class="flex items-center justify-between text-xs pt-1">
-                    <label class="flex items-center gap-2 cursor-pointer text-slate-600">
-                        <input type="checkbox" id="remember-me" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                        <span>Ghi nhớ tài khoản</span>
-                    </label>
-                </div>
-
-                <button type="submit" id="btn-submit" class="w-full py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 active:scale-95 transition">
-                    ĐĂNG NHẬP
-                </button>
-            </form>
-
-            <div class="text-center pt-2 border-t border-slate-100">
-                <button type="button" onclick="toggleAuthMode()" id="btn-toggle-mode" class="text-xs font-semibold text-emerald-600">
-                    Chưa có tài khoản? Đăng ký Chủ Lò
-                </button>
-            </div>
+    <div class="the">
+      <h3 id="tieu-de-form"><i class="fas fa-plus-circle icon-xanh-la"></i> Thêm đơn hàng mới</h3>
+      <form class="form-hang-doc" id="form-don-hang">
+        <input type="hidden" id="ma-don-hang" value="" />
+        <div class="khung-input">
+          <label><i class="fas fa-user icon-dong"></i> Tên khách hàng <span style="color:red">*</span></label>
+          <input type="text" id="ten-kh" placeholder="VD: Nguyễn Văn A" />
         </div>
+        <div class="khung-input">
+          <label><i class="fas fa-seedling icon-xanh-la"></i> Số lượng gà con <span style="color:red">*</span></label>
+          <input type="number" id="so-luong" placeholder="VD: 500" min="1" />
+        </div>
+        <div class="khung-input">
+          <label><i class="fas fa-coins icon-cam"></i> Giá 1 con (đồng) <span style="color:red">*</span></label>
+          <input type="number" id="gia-mot-con" placeholder="VD: 25000" min="100" />
+        </div>
+        <div class="khung-input">
+          <label><i class="fas fa-calendar-check icon-tim"></i> Ngày đặt / nhận cọc</label>
+          <input type="date" id="ngay-dat" />
+          <div class="ghi-chu">👉 Mặc định là hôm nay</div>
+        </div>
+        <div class="khung-input">
+          <label><i class="fas fa-dolly-flatbed icon-do"></i> Ngày dự kiến giao <span style="color:red">*</span></label>
+          <input type="date" id="ngay-giao-du-kien" />
+          <div class="ghi-chu">👉 Ngày bắt đầu ấp: <strong id="ngay-bat-dau-ap">--/--/----</strong> (trước 21 ngày)</div>
+        </div>
+        <div class="khung-input">
+          <label><i class="fas fa-money-bill-wave icon-xanh-la"></i> Tiền cọc đã nhận</label>
+          <input type="number" id="tien-coc" placeholder="0" min="0" />
+        </div>
+        <div class="hang-nut">
+          <button type="button" class="nut xanh-la" onclick="luuDonHang()"><i class="fas fa-save"></i> Lưu đơn hàng</button>
+          <button type="button" class="nut cam che" id="nut-huy-sua" onclick="huySua()"><i class="fas fa-times"></i> Hủy sửa</button>
+          <button type="button" class="nut tim" onclick="taiVanBan()"><i class="fas fa-file-download"></i> Tải lưu văn bản</button>
+        </div>
+      </form>
     </div>
 
-    <!-- ==================== MAIN DASHBOARD ==================== -->
-    <div id="app-screen" class="hidden h-full flex flex-col">
-        <!-- THANH HEADER MÀU XANH CẢI TIẾN -->
-        <header id="main-header" class="sticky top-0 z-30 bg-emerald-700 text-white shadow-md transition-colors duration-300 pt-safe px-4 py-2.5">
-            <div class="flex items-center justify-between gap-2">
-                
-                <!-- 1. THỜI TIẾT 2 NGÀY -->
-                <div class="flex items-center gap-3 bg-black/15 backdrop-blur-md px-3 py-1.5 rounded-2xl text-xs border border-white/10">
-                    <div class="flex items-center gap-1.5 border-r border-white/20 pr-2.5">
-                        <i class="fa-solid fa-cloud-sun text-amber-300 text-sm"></i>
-                        <div>
-                            <span class="block text-[9px] opacity-80 font-medium">Hôm nay</span>
-                            <span class="font-extrabold text-xs">31°C</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-cloud-rain text-cyan-200 text-sm"></i>
-                        <div>
-                            <span class="block text-[9px] opacity-80 font-medium">Ngày mai</span>
-                            <span class="font-extrabold text-xs">28°C</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. THÔNG BÁO, USER, CÀI ĐẶT & ĐĂNG XUẤT -->
-                <div class="flex items-center gap-2">
-                    
-                    <!-- Chuông thông báo -->
-                    <div class="relative">
-                        <button onclick="toggleNotiMenu()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center relative active:scale-95 transition">
-                            <i class="fa-solid fa-bell text-xs"></i>
-                            <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-emerald-700 animate-pulse">2</span>
-                        </button>
-
-                        <!-- Menu Thông Báo Popover -->
-                        <div id="noti-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white text-slate-800 rounded-2xl shadow-xl border border-slate-100 p-3 z-50 space-y-2">
-                            <h4 class="text-xs font-bold border-b pb-1 text-slate-500 uppercase">Thông báo sự kiện</h4>
-                            <div class="flex items-start gap-2 text-xs p-1.5 bg-amber-50 text-amber-900 rounded-xl">
-                                <i class="fa-solid fa-egg text-amber-600 mt-0.5"></i>
-                                <div><b>Sắp nở:</b> Lô gà Ri 500 trứng nở sau 2 ngày.</div>
-                            </div>
-                            <div class="flex items-start gap-2 text-xs p-1.5 bg-rose-50 text-rose-900 rounded-xl">
-                                <i class="fa-solid fa-file-invoice-dollar text-rose-600 mt-0.5"></i>
-                                <div><b>Công nợ:</b> Đơn hàng #102 đến hạn tất toán.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Họ Tên Chủ Lò -->
-                    <div id="user-display-name" class="text-right px-1">
-                        <span class="block text-xs font-bold leading-tight" id="user-name">Chủ Lò</span>
-                        <span class="block text-[9px] text-emerald-200 font-semibold uppercase" id="user-role-badge">Role</span>
-                    </div>
-
-                    <!-- Nút Cài Đặt -->
-                    <button onclick="openSettingsModal()" title="Cài đặt giao diện" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center active:scale-95 transition">
-                        <i class="fa-solid fa-gear text-xs"></i>
-                    </button>
-
-                    <!-- Nút Đăng Xuất -->
-                    <button onclick="logoutUser()" title="Đăng xuất" class="w-8 h-8 rounded-full bg-rose-500/80 hover:bg-rose-600 text-white flex items-center justify-center active:scale-95 transition ml-0.5">
-                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Role Switcher cho Admin -->
-            <div id="admin-role-switcher" class="hidden mt-2 bg-black/20 p-1 rounded-xl text-xs font-semibold">
-                <button onclick="switchRole('admin')" id="tab-admin" class="flex-1 py-1 rounded-lg text-center bg-white text-emerald-800 shadow-sm transition">
-                    <i class="fa-solid fa-user-shield mr-1"></i> Admin
-                </button>
-                <button onclick="switchRole('owner')" id="tab-owner" class="flex-1 py-1 rounded-lg text-center text-white/70 hover:text-white transition">
-                    <i class="fa-solid fa-warehouse mr-1"></i> Chủ Lò
-                </button>
-                <button onclick="switchRole('customer')" id="tab-customer" class="flex-1 py-1 rounded-lg text-center text-white/70 hover:text-white transition">
-                    <i class="fa-solid fa-user mr-1"></i> Khách Hàng
-                </button>
-            </div>
-        </header>
-
-        <!-- NỘI DUNG CHÍNH -->
-        <main class="flex-1 overflow-y-auto px-4 py-4 pb-safe space-y-4">
-            <div id="view-admin" class="space-y-4 hidden">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Bảng Điều Khiển Admin</span>
-                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded">Full Rights</span>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
-                        <span class="text-[10px] text-slate-400 font-semibold uppercase">Tổng Chủ Lò</span>
-                        <div class="text-xl font-black text-slate-800 mt-1">12 Lò ấp</div>
-                    </div>
-                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
-                        <span class="text-[10px] text-slate-400 font-semibold uppercase">Tài Khoản Khách</span>
-                        <div class="text-xl font-black text-slate-800 mt-1">485 User</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-owner" class="space-y-4 hidden">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Vận Hành Lò Ấp</span>
-                    <span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded">Lò Ấp Số 1</span>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
-                        <span class="text-[11px] font-semibold text-slate-400">Trứng đang ấp</span>
-                        <div class="text-2xl font-black text-slate-800 mt-1">1,240</div>
-                    </div>
-                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm">
-                        <span class="text-[11px] font-semibold text-slate-400">Sắp nở (3 ngày)</span>
-                        <div class="text-2xl font-black text-amber-600 mt-1">350</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-customer" class="space-y-4 hidden">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Khách Hàng Theo Dõi</span>
-                </div>
-                <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-md">
-                    <span class="text-xs text-emerald-100">Đơn ấp hiện tại của bạn</span>
-                    <div class="text-xl font-bold mt-1">500 Trứng Gà Ri</div>
-                </div>
-            </div>
-        </main>
+    <div class="the">
+      <h3><i class="fas fa-chart-pie icon-dong"></i> Tóm tắt công nợ</h3>
+            <!-- Ô TÌM KIẾM theo tên khách hàng -->
+      <div style="margin-bottom:12px; display:flex; gap:8px; align-items:center;">
+        <i class="fas fa-search" style="color:#2563eb;"></i>
+        <input type="text" id="tim-kiem-kh" placeholder="🔍 Tìm theo tên khách hàng..." 
+               oninput="locDanhSachDonHang()" 
+               style="flex:1; padding:10px 12px; border:1px solid #93c5fd; border-radius:8px; font-size:14px; background:#eff6ff;" />
+      </div>
+      <div class="tom-tat">
+        <div class="muc xanh-la"><div>Tổng tiền cọc nhận</div><div class="so" id="tong-tien-coc">0 đ</div></div>
+        <div class="muc do"><div>Tổng công nợ còn lại</div><div class="so" id="tong-cong-no">0 đ</div></div>
+      </div>
     </div>
 
-    <!-- ==================== MODAL CÀI ĐẶT GIAO DIỆN ==================== -->
-    <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-xs rounded-3xl p-5 shadow-2xl border border-slate-100 space-y-4">
-            <div class="flex items-center justify-between border-b pb-2">
-                <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-palette text-emerald-600 mr-1.5"></i> Cài Đặt Giao Diện</h3>
-                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-sm">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+    <div class="the">
+      <h3><i class="fas fa-list-alt icon-tim"></i> Danh sách đơn hàng</h3>
+      <table class="danh-sach">
+        <thead>
+          <tr>
+            <th>Tên KH</th><th>Số lượng</th><th>Ngày đặt</th><th>Ngày Vào Tr</th><th>Ngày giao</th><th>Thành tiền</th><th>Tiền cọc</th><th>Còn nợ</th><th>Trạng thái</th><th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="danh-sach-don-hang"></tbody>
+      </table>
+    </div>
+  </main>
 
-            <!-- 1. Kích thước Font chữ -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-semibold text-slate-600">Kích thước font chữ</label>
-                <select id="font-size-select" onchange="applyFontSize(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none">
-                    <option value="text-sm">Nhỏ (14px)</option>
-                    <option value="text-base" selected>Vừa (16px)</option>
-                    <option value="text-lg">Lớn (18px)</option>
-                </select>
-            </div>
+  <main class="noi-dung" id="noi-dung-admin">
+    <div class="thong-tin-tk admin">
+      <strong>👑 QUẢN TRỊ VIÊN — Toàn bộ dữ liệu hệ thống</strong><br/>
+      Email quản trị: <span id="admin-email">—</span> | Tổng số chủ lò: <span id="tong-chu-lo">0</span>
+    </div>
+    <div class="the">
+      <h3><i class="fas fa-users icon-tim"></i> Danh sách toàn bộ chủ lò</h3>
+      <table class="danh-sach">
+        <thead><tr><th>Email chủ lò</th><th>Điện thoại</th><th>Địa chỉ</th><th>Số đơn hàng</th></tr></thead>
+        <tbody id="danh-sach-chu-lo"></tbody>
+      </table>
+    </div>
+  </main>
 
-            <!-- 2. Màu chữ giao diện -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-semibold text-slate-600">Màu chữ nội dung</label>
-                <div class="flex gap-2">
-                    <button onclick="applyTextColor('text-slate-800')" class="flex-1 py-1.5 rounded-xl border text-xs font-bold border-slate-300 text-slate-800 bg-slate-50">Tối</button>
-                    <button onclick="applyTextColor('text-blue-900')" class="flex-1 py-1.5 rounded-xl border text-xs font-bold border-blue-300 text-blue-900 bg-blue-50">Xanh</button>
-                    <button onclick="applyTextColor('text-emerald-950')" class="flex-1 py-1.5 rounded-xl border text-xs font-bold border-emerald-300 text-emerald-950 bg-emerald-50">Lục</button>
-                </div>
-            </div>
+  <script>
+    // ===== CẤU HÌNH FIREBASE =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyAuDQzgGvJtEn6Ch_EvgVxa6UQM9FjvVQ0",
+      authDomain: "aptrungga-1d7fa.firebaseapp.com",
+      databaseURL: "https://aptrungga-1d7fa-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "aptrungga-1d7fa",
+      storageBucket: "aptrungga-1d7fa.firebasestorage.app",
+      messagingSenderId: "627730374763",
+      appId: "1:627730374763:web:13a309d5413c2f14ee512e"
+    };
 
-            <!-- 3. Màu sắc Thanh công cụ Header -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-semibold text-slate-600">Màu thanh công cụ (Header)</label>
-                <div class="grid grid-cols-4 gap-2">
-                    <button onclick="applyHeaderColor('bg-emerald-700')" class="h-8 rounded-xl bg-emerald-700 ring-2 ring-offset-1 ring-emerald-700"></button>
-                    <button onclick="applyHeaderColor('bg-blue-700')" class="h-8 rounded-xl bg-blue-700"></button>
-                    <button onclick="applyHeaderColor('bg-slate-800')" class="h-8 rounded-xl bg-slate-800"></button>
-                    <button onclick="applyHeaderColor('bg-teal-700')" class="h-8 rounded-xl bg-teal-700"></button>
-                </div>
-            </div>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    let UID = null;
+    let LA_ADMIN = false;
+    const EMAIL_ADMIN = "admin@aptrungga.vn";
 
-            <button onclick="closeSettingsModal()" class="w-full py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md">
-                HOÀN TẤT
+    // ===== CHUYỂN FORM =====
+    function hienDangKy() {
+      document.getElementById('khung-dang-nhap').style.display = 'none';
+      document.getElementById('khung-dang-ky').style.display = 'block';
+      document.getElementById('tb-dk').className = 'thong-bao';
+      document.getElementById('tb-dk').innerHTML = '';
+    }
+    function hienDangNhap() {
+      document.getElementById('khung-dang-ky').style.display = 'none';
+      document.getElementById('khung-dang-nhap').style.display = 'block';
+      document.getElementById('tb-dn').className = 'thong-bao';
+      document.getElementById('tb-dn').innerHTML = '';
+    }
+    function hienDangNhapAdmin() {
+      document.getElementById('khung-dang-ky').style.display = 'none';
+      document.getElementById('khung-dang-nhap').style.display = 'block';
+      document.getElementById('tb-dn').innerHTML = '<div style="background:#f5f3ff; padding:8px; border-radius:6px; font-size:13px;">👑 Đăng nhập với tài khoản: ' + EMAIL_ADMIN + '</div>';
+    }
+
+    // ===== TÍNH NGÀY BẮT ĐẦU ẤP =====
+    document.getElementById('ngay-giao-du-kien').addEventListener('change', function(){
+      const ngayGiao = this.value;
+      if (!ngayGiao) { document.getElementById('ngay-bat-dau-ap').textContent = '--/--/----'; return; }
+      const d = new Date(ngayGiao);
+      d.setDate(d.getDate() - 21);
+      document.getElementById('ngay-bat-dau-ap').textContent = d.toISOString().split('T')[0].split('-').reverse().join('/');
+    });
+
+    // ===== ĐĂNG KÝ =====
+    async function dangKy() {
+      const email = document.getElementById('email-dk').value.trim().toLowerCase();
+      const matKhau = document.getElementById('matkhau-dk').value;
+      const xacNhanMK = document.getElementById('xacnhan-matkhau').value;
+      const dienThoai = document.getElementById('dienthoai-dk').value.trim();
+      const diaChi = document.getElementById('diachi-dk').value.trim();
+      const tb = document.getElementById('tb-dk');
+
+      if (!email || !dienThoai || !matKhau) { tb.className='thong-bao loi'; tb.innerHTML='❌ Điền đầy đủ thông tin bắt buộc!'; return; }
+      if (matKhau.length < 6) { tb.className='thong-bao loi'; tb.innerHTML='❌ Mật khẩu ít nhất 6 ký tự!'; return; }
+      if (matKhau !== xacNhanMK) { tb.className='thong-bao loi'; tb.innerHTML='❌ Mật khẩu xác nhận không khớp!'; return; }
+      if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$/.test(email)) { tb.className='thong-bao loi'; tb.innerHTML='❌ Email không hợp lệ!'; return; }
+
+      try {
+        const taiKhoan = await auth.createUserWithEmailAndPassword(email, matKhau);
+        UID = taiKhoan.user.uid;
+        await db.ref('nguoi_dung/'+UID).set({
+          email: email, dien_thoai: dienThoai, dia_chi: diaChi, vai_tro: 'chu_lo',
+          ngay_dang_ky: new Date().toLocaleString('vi-VN')
+        });
+        tb.className='thong-bao thanh-cong'; tb.innerHTML='✅ Đăng ký thành công! Đang chuyển...';
+      } catch (err) {
+        tb.className='thong-bao loi'; tb.innerHTML='❌ Lỗi: ' + err.message;
+      }
+    }
+
+    // ===== ĐĂNG NHẬP =====
+    async function dangNhap() {
+      const email = document.getElementById('email-dn').value.trim().toLowerCase();
+      const matKhau = document.getElementById('matkhau-dn').value;
+      const tb = document.getElementById('tb-dn');
+      try {
+        await auth.signInWithEmailAndPassword(email, matKhau);
+      } catch (err) {
+        tb.className='thong-bao loi';
+        tb.innerHTML='❌ Sai email hoặc mật khẩu!';
+      }
+    }
+
+    function dangXuat() { 
+      auth.signOut(); 
+      LA_ADMIN = false; 
+      UID = null; 
+      // ✅ Đóng thông báo khi đăng xuất
+      document.getElementById('khung-thongbao').classList.remove('hien');
+    }
+
+    // ===== KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP & HIỂN THỊ NỘI DUNG =====
+    auth.onAuthStateChanged((nguoiDung) => {
+      console.log('Trạng thái đăng nhập thay đổi:', nguoiDung ? nguoiDung.email : 'Chưa đăng nhập');
+      
+      if (nguoiDung) {
+        UID = nguoiDung.uid;
+        LA_ADMIN = (nguoiDung.email.toLowerCase() === EMAIL_ADMIN);
+
+        // Ẩn form đăng nhập / đăng ký
+        document.getElementById('khung-dang-nhap').style.display = 'none';
+        document.getElementById('khung-dang-ky').style.display = 'none';
+        document.getElementById('nut-dang-xuat').style.display = 'inline-block';
+        document.getElementById('email-nguoi-dung').textContent = nguoiDung.email;
+
+        if (LA_ADMIN) {
+          // Hiển thị giao diện Admin
+          document.getElementById('noi-dung-chinh').classList.remove('hien');
+          document.getElementById('noi-dung-chinh').classList.add('che');
+          document.getElementById('noi-dung-admin').classList.remove('che');
+          document.getElementById('noi-dung-admin').classList.add('hien');
+          document.getElementById('admin-email').textContent = nguoiDung.email;
+          taiDuLieuAdmin();
+        } else {
+          // Hiển thị giao diện Chủ lò
+          document.getElementById('noi-dung-chinh').classList.remove('che');
+          document.getElementById('noi-dung-chinh').classList.add('hien');
+          document.getElementById('noi-dung-admin').classList.add('che');
+          document.getElementById('noi-dung-admin').classList.remove('hien');
+
+          // Đặt mặc định ngày hôm nay
+          document.getElementById('ngay-dat').valueAsDate = new Date();
+
+          // Đọc thông tin tài khoản
+          db.ref('nguoi_dung/'+UID).once('value').then((snap) => {
+            const tt = snap.val() || {};
+            console.log('Thông tin tài khoản:', tt);
+            document.getElementById('tt-email').textContent = tt.email || nguoiDung.email;
+            document.getElementById('tt-dienthoai').textContent = tt.dien_thoai || 'Chưa cập nhật';
+            document.getElementById('tt-diachi').textContent = tt.dia_chi || 'Chưa cập nhật';
+          });
+
+          // Tải danh sách đơn hàng
+          taiDanhSachDonHang();
+        }
+      } else {
+        // Chưa đăng nhập → hiện form đăng nhập, ẩn nội dung
+        UID = null;
+        LA_ADMIN = false;
+        document.getElementById('khung-thongbao').classList.remove('hien');
+        document.getElementById('danh-sach-thongbao').innerHTML = '';
+        document.getElementById('so-thongbao').textContent = '0';
+        document.getElementById('khung-dang-nhap').style.display = 'block';
+        document.getElementById('khung-dang-ky').style.display = 'none';
+        document.getElementById('noi-dung-chinh').classList.add('che');
+        document.getElementById('noi-dung-chinh').classList.remove('hien');
+        document.getElementById('noi-dung-admin').classList.add('che');
+        document.getElementById('noi-dung-admin').classList.remove('hien');
+        document.getElementById('email-nguoi-dung').textContent = '';
+        document.getElementById('nut-dang-xuat').style.display = 'none';
+      }
+    });
+
+    // ===== LƯU ĐƠN HÀNG =====
+    async function luuDonHang() {
+      const maDon = document.getElementById('ma-don-hang').value;
+      const tenKH = document.getElementById('ten-kh').value.trim();
+      const soLuong = parseInt(document.getElementById('so-luong').value) || 0;
+      const giaMotCon = parseInt(document.getElementById('gia-mot-con').value) || 0;
+      const ngayDat = document.getElementById('ngay-dat').value;
+      const ngayGiao = document.getElementById('ngay-giao-du-kien').value;
+      const tienCoc = parseInt(document.getElementById('tien-coc').value) || 0;
+
+      if (!tenKH || soLuong <= 0 || giaMotCon <= 0 || !ngayGiao) { 
+        alert('❌ Vui lòng điền đầy đủ thông tin bắt buộc!'); 
+        return; 
+      }
+
+      const dGiao = new Date(ngayGiao);
+      dGiao.setDate(dGiao.getDate() - 21);
+      const ngayBatDauAp = dGiao.toISOString().split('T')[0];
+      const thanhTien = soLuong * giaMotCon;
+      const conNo = thanhTien - tienCoc;
+      const trangThai = conNo <= 0 ? 'da-tra' : 'chua-tra';
+
+      const duLieu = {
+        ten_khach: tenKH, so_luong: soLuong, gia_mot_con: giaMotCon,
+        thanh_tien: thanhTien, tien_coc: tienCoc, con_no: conNo,
+        ngay_dat: ngayDat, ngay_bat_dau_ap: ngayBatDauAp,
+        ngay_giao_du_kien: ngayGiao, trang_thai: trangThai
+      };
+
+      try {
+        if (maDon) {
+          await db.ref('nguoi_dung/'+UID+'/don_hang/'+maDon).update(duLieu);
+          alert('✅ Đã cập nhật đơn hàng!');
+          document.getElementById('tieu-de-form').innerHTML = '<i class="fas fa-plus-circle icon-xanh-la"></i> Thêm đơn hàng mới';
+          document.getElementById('nut-huy-sua').classList.add('che');
+        } else {
+          const key = db.ref('nguoi_dung/'+UID+'/don_hang').push().key;
+          await db.ref('nguoi_dung/'+UID+'/don_hang/'+key).set(duLieu);
+          alert('✅ Đã lưu đơn hàng thành công!');
+        }
+        // Reset form
+        document.getElementById('form-don-hang').reset();
+        document.getElementById('ma-don-hang').value = '';
+        document.getElementById('ngay-dat').valueAsDate = new Date();
+        document.getElementById('ngay-bat-dau-ap').textContent = '--/--/----';
+      } catch (err) {
+        alert('❌ Lỗi: ' + err.message);
+      }
+    }
+
+    // ===== TẢI DANH SÁCH ĐƠN HÀNG =====
+    // ===== TẢI DANH SÁCH ĐƠN HÀNG =====
+// ===== TẢI DANH SÁCH ĐƠN HÀNG — SẮP XẾP theo NGÀY GIAO + TÌM KIẾM =====
+function taiDanhSachDonHang() {
+  console.log('Đang tải danh sách đơn hàng cho UID:', UID);
+  
+  if (!UID) {
+    console.log('Chưa có UID, dừng tải dữ liệu');
+    return;
+  }
+
+  db.ref('nguoi_dung/'+UID+'/don_hang').on('value', (snap) => {
+    const ds = snap.val() || {};
+    console.log('Dữ liệu đơn hàng nhận được:', ds);
+    
+    // ==== BƯỚC 1: Chuyển thành mảng + SẮP XẾP theo NGÀY GIAO gần nhất lên trên ====
+    const mangDonHang = Object.entries(ds).map(([key, dh]) => ({
+      key,
+      ...dh
+    }));
+
+    // ✅ SẮP XẾP: Ngày giao SẮP ĐẾM lên TRÊN, xa hơn xuống DƯỚI
+    mangDonHang.sort((a, b) => {
+      const ngayA = a.ngay_giao_du_kien || '9999-12-31';
+      const ngayB = b.ngay_giao_du_kien || '9999-12-31';
+      return new Date(ngayA) - new Date(ngayB); // Ngày sớm lên trước
+    });
+
+    // ==== BƯỚC 2: Lưu dữ liệu vào biến toàn cục để lọc tìm kiếm ====
+    window.danhSachDonHangGoc = mangDonHang;
+
+    // ==== BƯỚC 3: Hiển thị danh sách (sẽ gọi lại hàm lọc) ====
+    locDanhSachDonHang();
+  });
+}
+
+// ===== LỌC DANH SÁCH theo TÊN KHÁCH HÀNG =====
+function locDanhSachDonHang() {
+  const tbody = document.getElementById('danh-sach-don-hang');
+  const tuKhoa = document.getElementById('tim-kiem-kh')?.value?.trim().toLowerCase() || '';
+  const homNay = new Date(); 
+  homNay.setHours(0,0,0,0);
+  const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
+
+  let tongTienCoc = 0, tongCongNo = 0;
+  let dsSapGiao = [];
+
+  tbody.innerHTML = '';
+
+  // Lấy danh sách gốc hoặc mảng rỗng
+  const mangLoc = window.danhSachDonHangGoc || [];
+
+  // Lọc theo tên khách hàng
+  const ketQuaLoc = mangLoc.filter(dh => {
+    if (!tuKhoa) return true; // Không nhập từ khóa → hiện tất cả
+    return (dh.ten_khach || '').toLowerCase().includes(tuKhoa);
+  });
+
+  // Duyệt và in ra bảng
+  ketQuaLoc.forEach(dh => {
+    tongTienCoc += dh.tien_coc || 0;
+    if ((dh.con_no || 0) > 0) tongCongNo += dh.con_no;
+
+    const ngayDat = fmtNgay(dh.ngay_dat);
+    const ngayAp = fmtNgay(dh.ngay_bat_dau_ap);
+    const ngayGiao = fmtNgay(dh.ngay_giao_du_kien);
+
+    // ==== KIỂM TRA NGÀY GIAO & TẠO THÔNG BÁO ====
+    if (dh.ngay_giao_du_kien && dh.trang_thai !== 'da-giao') {
+      const dGiao = new Date(dh.ngay_giao_du_kien);
+      dGiao.setHours(0,0,0,0);
+      const soNgay = Math.ceil((dGiao - homNay) / (1000*60*60*24));
+      
+      if (soNgay >= 0 && soNgay <= 7) {
+        let vanBanThongBao;
+        if (soNgay === 0) {
+          vanBanThongBao = `🔴 HÔM NAY giao: ${dh.ten_khach} — Ngày giao: ${ngayGiao}`;
+        } else if (soNgay === 1) {
+          vanBanThongBao = `🟡 NGÀY MAI giao: ${dh.ten_khach} — Ngày giao: ${ngayGiao}`;
+        } else {
+          vanBanThongBao = `🟢 Còn ${soNgay} ngày sẽ giao: ${dh.ten_khach} — Ngày giao: ${ngayGiao}`;
+        }
+        dsSapGiao.push(vanBanThongBao);
+      }
+    }
+
+    // Trạng thái
+    let trangThaiText, trangThaiClass;
+    if (dh.trang_thai === 'da-giao') {
+      trangThaiText = '✅ Đã giao'; trangThaiClass = 'xanh-la';
+    } else if (dh.con_no <= 0) {
+      trangThaiText = '💵 Đã trả đủ'; trangThaiClass = 'xanh-la';
+    } else {
+      trangThaiText = '⏳ Chưa trả đủ'; trangThaiClass = 'do';
+    }
+
+    // Thêm dòng vào bảng
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${dh.ten_khach}</strong></td>
+      <td>${(dh.so_luong || 0).toLocaleString('vi-VN')}</td>
+      <td>${ngayDat}</td>
+      <td class="tim">${ngayAp}</td>
+      <td>${ngayGiao}</td>
+      <td>${(dh.thanh_tien||0).toLocaleString('vi')}</td>
+      <td>${(dh.tien_coc||0).toLocaleString('vi')}</td>
+      <td class="${dh.con_no > 0 ? 'do' : 'xanh-la'}">${(dh.con_no||0).toLocaleString('vi')}</td>
+      <td class="${trangThaiClass}">${trangThaiText}</td>
+      <td>
+        <span class="sua" onclick="suaDonHang('${dh.key}')" title="Sửa đơn"><i class="fas fa-edit"></i></span>
+        <span class="da-giao" onclick="danhDauDaGiao('${dh.key}')" title="Đã giao"><i class="fas fa-check-circle"></i></span>
+        <span class="xoa" onclick="xoaDonHang('${dh.key}')" title="Xóa đơn"><i class="fas fa-trash"></i></span>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Cập nhật tóm tắt
+  document.getElementById('tong-tien-coc').textContent = tongTienCoc.toLocaleString('vi') + ' đ';
+  document.getElementById('tong-cong-no').textContent = tongCongNo.toLocaleString('vi') + ' đ';
+
+  // Cập nhật thông báo
+  document.getElementById('so-thongbao').textContent = dsSapGiao.length;
+  const khungTB = document.getElementById('danh-sach-thongbao');
+  khungTB.innerHTML = '';
+  if (dsSapGiao.length > 0) {
+    dsSapGiao.forEach(tb => {
+      const div = document.createElement('div');
+      div.className = 'item-thongbao';
+      div.textContent = tb;
+      khungTB.appendChild(div);
+    });
+  } else {
+    khungTB.innerHTML = '<div class="item-thongbao" style="color:#16a34a;">✅ Tuyệt vời! Không có đơn hàng cần giao trong 7 ngày tới</div>';
+  }
+}
+
+    // ===== SỬA ĐƠN HÀNG =====
+    async function suaDonHang(key) {
+      const dh = await db.ref('nguoi_dung/'+UID+'/don_hang/'+key).once('value');
+      const d = dh.val();
+      if (!d) return;
+
+      document.getElementById('ma-don-hang').value = key;
+      document.getElementById('tieu-de-form').innerHTML = '<i class="fas fa-edit icon-cam"></i> Sửa thông tin đơn hàng';
+      document.getElementById('nut-huy-sua').classList.remove('che');
+
+      document.getElementById('ten-kh').value = d.ten_khach || '';
+      document.getElementById('so-luong').value = d.so_luong || '';
+      document.getElementById('gia-mot-con').value = d.gia_mot_con || '';
+      document.getElementById('ngay-dat').value = d.ngay_dat || '';
+      document.getElementById('ngay-giao-du-kien').value = d.ngay_giao_du_kien || '';
+      document.getElementById('tien-coc').value = d.tien_coc || '';
+
+      if (d.ngay_giao_du_kien) {
+        const dGiao = new Date(d.ngay_giao_du_kien);
+        dGiao.setDate(dGiao.getDate() - 21);
+        document.getElementById('ngay-bat-dau-ap').textContent = dGiao.toISOString().split('T')[0].split('-').reverse().join('/');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ===== HỦY SỬA =====
+    function huySua() {
+      document.getElementById('ma-don-hang').value = '';
+      document.getElementById('tieu-de-form').innerHTML = '<i class="fas fa-plus-circle icon-xanh-la"></i> Thêm đơn hàng mới';
+      document.getElementById('nut-huy-sua').classList.add('che');
+      document.getElementById('form-don-hang').reset();
+      document.getElementById('ngay-dat').valueAsDate = new Date();
+      document.getElementById('ngay-bat-dau-ap').textContent = '--/--/----';
+    }
+
+    // ===== ĐÁNH DẤU ĐÃ GIAO =====
+    async function danhDauDaGiao(key) {
+      if (confirm('✅ Đánh dấu đơn hàng này là ĐÃ GIAO HÀNG?')) {
+        await db.ref('nguoi_dung/'+UID+'/don_hang/'+key+'/trang_thai').set('da-giao');
+        alert('✅ Đã cập nhật: Đơn hàng đã giao!');
+      }
+    }
+
+    // ===== XÓA ĐƠN HÀNG =====
+    async function xoaDonHang(key) {
+      if (confirm('⚠️ Bạn có CHẮC CHẮN muốn XÓA đơn hàng này?')) {
+        await db.ref('nguoi_dung/'+UID+'/don_hang/'+key).remove();
+        alert('✅ Đã xóa đơn hàng!');
+      }
+    }
+
+    // ===== HIỂN THỊ THÔNG BÁO =====
+    // ===== HIỂN THỊ THÔNG BÁO + CUỘN XUỐNG DANH SÁCH =====
+function hienThongBao() {
+  document.getElementById('khung-thongbao').classList.toggle('hien');
+  // Tự động cuộn xuống danh sách đơn hàng
+  const bangDanhSach = document.getElementById('danh-sach-don-hang');
+  if (bangDanhSach) {
+    bangDanhSach.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// Đóng thông báo khi nhấn ra ngoài
+document.addEventListener('click', (e) => {
+  const khung = document.getElementById('khung-thongbao');
+  const chuong = document.querySelector('.chuong-thongbao');
+  if (!khung.contains(e.target) && !chuong.contains(e.target)) {
+    khung.classList.remove('hien');
+  }
+});
+
+    // ===== TẢI VĂN BẢN =====
+    async function taiVanBan() {
+      const dsSnap = await db.ref('nguoi_dung/'+UID+'/don_hang').once('value');
+      const ds = dsSnap.val();
+      if (!ds) { alert('❌ Chưa có đơn hàng nào!'); return; }
+
+      const ttSnap = await db.ref('nguoi_dung/'+UID).once('value');
+      const tt = ttSnap.val() || {};
+      const homNay = new Date().toLocaleString('vi-VN');
+      const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
+
+      let vanBan = `
+======================================================================
+           DANH SÁCH ĐƠN HÀNG - QUẢN LÝ LÒ ẤP GÀ CON
+======================================================================
+Thời gian lưu: ${homNay}
+Email: ${tt.email || 'Không xác định'}
+Điện thoại: ${tt.dien_thoai || 'Chưa cập nhật'}
+Địa chỉ: ${tt.dia_chi || 'Chưa cập nhật'}
+
+STT | Tên KH | Số lượng | Ngày đặt | Ngày ấp | Ngày giao | Thành tiền | Tiền cọc | Còn nợ | Trạng thái
+----------------------------------------------------------------------
+`;
+      let stt = 1;
+      Object.entries(ds).reverse().forEach(([k, dh]) => {
+        const trangThai = dh.trang_thai === 'da-giao' ? 'Đã giao' : 
+                         dh.con_no <= 0 ? 'Đã trả đủ' : 'Chưa trả đủ';
+        vanBan += `${String(stt).padStart(3,' ')} | ${dh.ten_khach.padEnd(14,' ')} | ${String(dh.so_luong).padStart(6,' ')} | ${fmtNgay(dh.ngay_dat)} | ${fmtNgay(dh.ngay_bat_dau_ap)} | ${fmtNgay(dh.ngay_giao_du_kien)} | ${String((dh.thanh_tien||0).toLocaleString('vi')).padStart(10,' ')} | ${String((dh.tien_coc||0).toLocaleString('vi')).padStart(8,' ')} | ${String((dh.con_no||0).toLocaleString('vi')).padStart(8,' ')} | ${trangThai}\n`;
+        stt++;
+      });
+
+      const tongCoc = Object.values(ds).reduce((t,d) => t + (d.tien_coc||0), 0);
+      const tongNo = Object.values(ds).reduce((t,d) => t + ((d.con_no||0) > 0 ? d.con_no : 0), 0);
+      vanBan += `
+======================================================================
+TỔNG CỘNG:
+  - Tổng tiền cọc nhận: ${tongCoc.toLocaleString('vi')} đ
+  - Tổng công nợ còn lại: ${tongNo.toLocaleString('vi')} đ
+======================================================================
+`;
+      taoVaTaiFile(vanBan, `danh_sach_don_hang_${new Date().toISOString().slice(0,10)}.txt`);
+    }
+
+    function taoVaTaiFile(noiDung, tenFile) {
+      const blob = new Blob([noiDung], {type:'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = tenFile;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert('✅ Đã tải văn bản thành công!');
+    }
+
+    // ===== DỮ LIỆU ADMIN =====
+    async function taiDuLieuAdmin() {
+      const dsSnap = await db.ref('nguoi_dung').once('value');
+      const ds = dsSnap.val() || {};
+      const tbodyChuLo = document.getElementById('danh-sach-chu-lo');
+      tbodyChuLo.innerHTML = '';
+      let tongChuLo = 0;
+
+      Object.entries(ds).forEach(([uid, tt]) => {
+        tongChuLo++;
+    
+        // Đếm số đơn hàng của chủ lò này
+        let soDonHang = 0;
+        if (tt.don_hang) {
+          soDonHang = Object.keys(tt.don_hang).length;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${tt.email || '—'}</td>
+          <td>${tt.dien_thoai || '—'}</td>
+          <td>${tt.dia_chi || '—'}</td>
+          <td style="text-align:center; font-weight:bold; color:#2563eb;">${soDonHang}</td>
+          <td style="text-align:center;">
+            <button class="nut xanh-la nho" onclick="xemDonHangCuaChuLo('${uid}')">
+              <i class="fas fa-eye"></i> Xem đơn hàng
             </button>
-        </div>
-    </div>
+          </td>
+        `;
+        tbodyChuLo.appendChild(tr);
+      });
 
-    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAqTPVij6QnPsrNx65fmTHNwxQfAqP2zAs",
-            authDomain: "quanlytrungap.firebaseapp.com",
-            projectId: "quanlytrungap",
-            storageBucket: "quanlytrungap.firebasestorage.app",
-            messagingSenderId: "336046803137",
-            appId: "1:336046803137:web:b1ec31338f577a2e9dec40",
-            databaseURL: "https://quanlytrungap-default-rtdb.firebaseio.com"
-        };
+      document.getElementById('tong-chu-lo').textContent = tongChuLo;
+    }
+  // ===== ADMIN XEM DANH SÁCH ĐƠN HÀNG CỦA CHỦ LÒ =====
+async function xemDonHangCuaChuLo(uidChuLo) {
+  const ttSnap = await db.ref('nguoi_dung/' + uidChuLo).once('value');
+  const tt = ttSnap.val() || {};
+  const ds = tt.don_hang || {};
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const db = firebase.database();
+  if (Object.keys(ds).length === 0) {
+    alert('❌ Chủ lò này chưa có đơn hàng nào!');
+    return;
+  }
 
-        let isSignUpMode = false;
-        let inactivityTimer = null;
-        const TIMEOUT_DURATION = 1 * 60 * 1000;
+  const homNay = new Date(); 
+  homNay.setHours(0,0,0,0);
+  const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
 
-        function resetInactivityTimer() {
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-            if (auth.currentUser) {
-                inactivityTimer = setTimeout(() => {
-                    alert("Tài khoản đã tự động đăng xuất do 1 phút không có thao tác!");
-                    logoutUser();
-                }, TIMEOUT_DURATION);
-            }
-        }
+  let noiDung = `📋 DANH SÁCH ĐƠN HÀNG CỦA: ${tt.email || 'Chưa có email'}\n`;
+  noiDung += `📞 Điện thoại: ${tt.dien_thoai || '—'}\n`;
+  noiDung += `🏠 Địa chỉ: ${tt.dia_chi || '—'}\n`;
+  noiDung += `═══════════════════════════════════════════════\n\n`;
+  
+  let stt = 1, tongTien = 0, tongConNo = 0;
 
-        ['click', 'mousemove', 'keypress', 'scroll', 'touchstart', 'touchmove'].forEach(event => {
-            document.addEventListener(event, resetInactivityTimer, true);
-        });
+  Object.entries(ds).reverse().forEach(([key, dh]) => {
+    const ngayDat = fmtNgay(dh.ngay_dat);
+    const ngayAp = fmtNgay(dh.ngay_bat_dau_ap);
+    const ngayGiao = fmtNgay(dh.ngay_giao_du_kien);
+    const thanhTien = dh.thanh_tien || 0;
+    const conNo = dh.con_no || 0;
+    tongTien += thanhTien;
+    if (conNo > 0) tongConNo += conNo;
 
-        function toggleAuthMode() {
-            isSignUpMode = !isSignUpMode;
-            document.getElementById('auth-title').innerText = isSignUpMode ? "Đăng Ký Chủ Lò Ấp" : "Đăng Nhập Hệ Thống";
-            document.getElementById('btn-submit').innerText = isSignUpMode ? "ĐĂNG KÝ TÀI KHOẢN" : "ĐĂNG NHẬP";
-            document.getElementById('btn-toggle-mode').innerText = isSignUpMode ? "Đã có tài khoản? Đăng nhập ngay" : "Chưa có tài khoản? Đăng ký Chủ Lò";
-            
-            document.getElementById('signup-fields').classList.toggle('hidden', !isSignUpMode);
-            document.getElementById('field-confirm-password').classList.toggle('hidden', !isSignUpMode);
-            document.getElementById('remember-box').classList.toggle('hidden', isSignUpMode);
+    let trangThai = dh.trang_thai === 'da-giao' ? '✅ Đã giao' : 
+                    conNo <= 0 ? '💵 Đã trả đủ' : '⏳ Chưa trả đủ';
 
-            document.getElementById('fullname').required = isSignUpMode;
-            document.getElementById('address').required = isSignUpMode;
-            document.getElementById('confirm-password').required = isSignUpMode;
+    noiDung += `${stt}. Khách: ${dh.ten_khach || '—'}\n`;
+    noiDung += `   Số lượng: ${(dh.so_luong || 0).toLocaleString('vi-VN')} con\n`;
+    noiDung += `   Ngày đặt: ${ngayDat} | Ngày ấp: ${ngayAp} | Ngày giao: ${ngayGiao}\n`;
+    noiDung += `   Thành tiền: ${thanhTien.toLocaleString('vi')} đ | Còn nợ: ${conNo.toLocaleString('vi')} đ\n`;
+    noiDung += `   Trạng thái: ${trangThai}\n`;
+    noiDung += `───────────────────────────────────────────────\n`;
+    stt++;
+  });
 
-            document.getElementById('auth-form').reset();
-        }
+  noiDung += `\n📊 TỔNG CỘNG:\n`;
+  noiDung += `   Tổng thành tiền: ${tongTien.toLocaleString('vi')} đ\n`;
+  noiDung += `   Tổng công nợ: ${tongConNo.toLocaleString('vi')} đ\n`;
 
-        async function handleAuth(e) {
-            e.preventDefault();
-            
-            // 1. Lấy dữ liệu và loại bỏ khoảng trắng dư thừa
-            let rawPhone = document.getElementById('phone').value.trim();
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('remember-me').checked;
-
-            // Chuẩn hóa SĐT thành Email Firebase
-            const emailAuth = `${rawPhone}@loaptrung.com`;
-
-            try {
-                if (isSignUpMode) {
-                    // === ĐĂNG KÝ ===
-                    const confirmPassword = document.getElementById('confirm-password').value;
-                    if (password !== confirmPassword) {
-                        alert("Mật khẩu xác nhận không khớp!");
-                        return;
-                    }
-
-                    const fullname = document.getElementById('fullname').value.trim();
-                    const address = document.getElementById('address').value.trim();
-                    const incubatorCapacity = document.getElementById('incubator-capacity').value || "0";
-                    const farmCapacity = document.getElementById('farm-capacity').value || "0";
-
-                    const userCredential = await auth.createUserWithEmailAndPassword(emailAuth, password);
-                    const user = userCredential.user;
-
-                    await db.ref('users/' + user.uid).set({
-                        fullname: fullname,
-                        phone: rawPhone,
-                        address: address,
-                        incubatorCapacity: incubatorCapacity,
-                        farmCapacity: farmCapacity,
-                        role: "owner",
-                        createdAt: firebase.database.ServerValue.TIMESTAMP
-                    });
-
-                    alert("Đăng ký tài khoản Chủ Lò Ấp thành công!");
-                } else {
-                    // === ĐĂNG NHẬP ===
-                    const persistence = rememberMe 
-                        ? firebase.auth.Auth.Persistence.LOCAL 
-                        : firebase.auth.Auth.Persistence.SESSION;
-                    
-                    await auth.setPersistence(persistence);
-                    await auth.signInWithEmailAndPassword(emailAuth, password);
-                }
-            } catch (error) {
-                let msg = error.message;
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    msg = "Sai số điện thoại hoặc mật khẩu!";
-                } else if (error.code === 'auth/invalid-email') {
-                    msg = "Số điện thoại không hợp lệ!";
-                }
-                alert("Đăng nhập thất bại: " + msg);
-            }
-        }
-
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                const snapshot = await db.ref('users/' + user.uid).once('value');
-                let userData = snapshot.val();
-
-                if (!userData) {
-                    userData = {
-                        fullname: user.email.split('@')[0],
-                        role: 'admin'
-                    };
-                }
-
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
-                
-                document.getElementById('user-name').innerText = userData.fullname || userData.phone;
-                document.getElementById('user-role-badge').innerText = userData.role;
-
-                if (userData.role === 'admin') {
-                    document.getElementById('admin-role-switcher').classList.remove('hidden');
-                    switchRole('admin');
-                } else {
-                    document.getElementById('admin-role-switcher').classList.add('hidden');
-                    switchRole(userData.role);
-                }
-
-                resetInactivityTimer();
-            } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
-                document.getElementById('app-screen').classList.add('hidden');
-                if (inactivityTimer) clearTimeout(inactivityTimer);
-            }
-        });
-
-        function logoutUser() {
-            auth.signOut();
-        }
-
-        function switchRole(role) {
-            document.getElementById('view-admin').classList.add('hidden');
-            document.getElementById('view-owner').classList.add('hidden');
-            document.getElementById('view-customer').classList.add('hidden');
-
-            const targetView = document.getElementById(`view-${role}`);
-            if (targetView) targetView.classList.remove('hidden');
-        }
-
-        // XỬ LÝ MENU THÔNG BÁO & CÀI ĐẶT
-        function toggleNotiMenu() {
-            document.getElementById('noti-dropdown').classList.toggle('hidden');
-        }
-
-        function openSettingsModal() {
-            document.getElementById('settings-modal').classList.remove('hidden');
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settings-modal').classList.add('hidden');
-        }
-
-        function applyFontSize(sizeClass) {
-            const body = document.getElementById('app-body');
-            body.classList.remove('text-sm', 'text-base', 'text-lg');
-            body.classList.add(sizeClass);
-        }
-
-        function applyTextColor(colorClass) {
-            const body = document.getElementById('app-body');
-            body.classList.remove('text-slate-800', 'text-blue-900', 'text-emerald-950');
-            body.classList.add(colorClass);
-        }
-
-        function applyHeaderColor(colorClass) {
-            const header = document.getElementById('main-header');
-            header.classList.remove('bg-emerald-700', 'bg-blue-700', 'bg-slate-800', 'bg-teal-700');
-            header.classList.add(colorClass);
-        }
-
-        // Tự động xóa trắng dữ liệu form khi vừa tải trang
-        window.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('auth-form');
-            if (form) form.reset();
-        });
-    </script>
+  alert(noiDung);
+}
+</script>
 </body>
 </html>
