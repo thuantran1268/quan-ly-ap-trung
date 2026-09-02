@@ -207,6 +207,7 @@
               <th style="padding:8px; border:1px solid #cbd5e1;">Số lượng</th>
               <th style="padding:8px; border:1px solid #cbd5e1;">Thành tiền</th>
               <th style="padding:8px; border:1px solid #cbd5e1;">Trạng thái nợ</th>
+              <th style="padding:8px; border:1px solid #cbd5e1; text-align:center;">Thao tác</th>
             </tr>
           </thead>
           <tbody id="tb-danh-sach-da-giao"></tbody>
@@ -909,27 +910,23 @@
       });
     }
 
-    // ===== RENDER LỊCH SỬ ĐÃ GIAO (TRONG MODAL POPUP) =====
-    // ===== RENDER LỊCH SỬ ĐÃ GIAO (TRONG MODAL POPUP) =====
-// ===== RENDER LỊCH SỬ ĐÃ GIAO (TRONG MODAL POPUP) =====
+// ===== RENDER LỊCH SỬ ĐÃ GIAO (CÓ NÚT THANH TOÁN) =====
 function renderDanhSachDaGiao(dsDaGiao) {
   const tbodyDaGiao = document.getElementById('tb-danh-sach-da-giao');
   if (!tbodyDaGiao) return;
   tbodyDaGiao.innerHTML = '';
 
-  // 1. Xóa tfoot cũ nếu đã tồn tại để tránh trùng lặp
   const table = tbodyDaGiao.closest('table');
   let tfoot = table.querySelector('tfoot');
   if (tfoot) tfoot.remove();
 
   if (dsDaGiao.length === 0) {
-    tbodyDaGiao.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; color:#64748b;">Chưa có đơn hàng nào đã giao.</td></tr>';
+    tbodyDaGiao.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:15px; color:#64748b;">Chưa có đơn hàng nào đã giao.</td></tr>';
     return;
   }
 
   let tongConNo = 0;
 
-  // 2. Duyệt danh sách và cộng dồn nợ
   dsDaGiao.forEach(dh => {
     const conNo = Number(dh.con_no) || 0;
     tongConNo += conNo;
@@ -946,24 +943,27 @@ function renderDanhSachDaGiao(dsDaGiao) {
           ? '<span style="color:#16a34a; font-weight:bold;">🟢 Đã trả đủ</span>' 
           : `<span style="color:#dc2626; font-weight:bold;">🔴 Còn nợ ${(conNo).toLocaleString('vi-VN')} đ</span>`}
       </td>
+      <td style="padding:8px; border:1px solid #e2e8f0; text-align:center;">
+        ${conNo > 0 
+          ? `<button class="nut xanh-la nho" onclick="thanhToanNoLichSu('${dh.key}')">💵 Thanh toán</button>` 
+          : '<span style="color:#94a3b8; font-size:12px;">—</span>'}
+      </td>
     `;
     tbodyDaGiao.appendChild(tr);
   });
 
-  // 3. Tạo hàng TỔNG CỘNG dư nợ ở cuối bảng
+  // Hàng TỔNG CỘNG ở cuối bảng
   tfoot = document.createElement('tfoot');
   tfoot.innerHTML = `
     <tr style="background:#f1f5f9; font-weight:bold;">
       <td colspan="4" style="padding:10px 8px; border:1px solid #cbd5e1; text-align:right; color:#1e293b;">
         TỔNG DƯ NỢ CÁC ĐƠN ĐÃ GIAO:
       </td>
-      <td style="padding:10px 8px; border:1px solid #cbd5e1; color:${tongConNo > 0 ? '#dc2626' : '#16a34a'}; font-size:14px;">
+      <td colspan="2" style="padding:10px 8px; border:1px solid #cbd5e1; color:${tongConNo > 0 ? '#dc2626' : '#16a34a'}; font-size:14px;">
         ${tongConNo > 0 ? tongConNo.toLocaleString('vi-VN') + ' đ' : '0 đ'}
       </td>
     </tr>
   `;
-  
-  // Chèn đúng cấu trúc HTML chuẩn (ngay sau tbody)
   tbodyDaGiao.insertAdjacentElement('afterend', tfoot);
 }
 
@@ -1170,6 +1170,55 @@ function renderDanhSachDaGiao(dsDaGiao) {
     });
 
     window.addEventListener('load', taiCaiDatDaLuu);
+    // ===== TÍNH NGÀY BẮT ĐẦU ẤP =====
+    document.getElementById('ngay-giao-du-kien').addEventListener('change', function(){
+      const ngayGiao = this.value;
+      if (!ngayGiao) { document.getElementById('ngay-bat-dau-ap').textContent = '--/--/----'; return; }
+      const d = new Date(ngayGiao);
+      d.setDate(d.getDate() - 21);
+      document.getElementById('ngay-bat-dau-ap').textContent = d.toISOString().split('T')[0].split('-').reverse().join('/');
+    });
+
+    // 👇 DÁN HÀM THANH TOÁN VÀO ĐÂY 👇
+    async function thanhToanNoLichSu(key) {
+      const dh = (window.danhSachDonHangGoc || []).find(item => item.key === key);
+      if (!dh) return;
+
+      const conNoHienTai = Number(dh.con_no) || 0;
+      
+      const nhapTien = prompt(
+        `Khách hàng: ${dh.ten_khach}\nSố nợ hiện tại: ${conNoHienTai.toLocaleString('vi-VN')} đ\n\nNhập số tiền khách thanh toán thêm:`,
+        conNoHienTai
+      );
+
+      if (nhapTien === null) return;
+
+      const tienTra = parseFloat(nhapTien) || 0;
+      if (tienTra <= 0) {
+        alert('❌ Số tiền thanh toán không hợp lệ!');
+        return;
+      }
+
+      const conNoMoi = Math.max(0, conNoHienTai - tienTra);
+
+      try {
+        await db.ref('nguoi_dung/' + UID + '/don_hang/' + key).update({
+          con_no: conNoMoi
+        });
+
+        if (window.danhSachDonHangGoc) {
+          const idx = window.danhSachDonHangGoc.findIndex(item => item.key === key);
+          if (idx !== -1) window.danhSachDonHangGoc[idx].con_no = conNoMoi;
+        }
+
+        alert(`✅ Đã thu thành công ${tienTra.toLocaleString('vi-VN')} đ!\nSố nợ còn lại của đơn: ${conNoMoi.toLocaleString('vi-VN')} đ`);
+        
+        if (typeof locDanhSachDonHang === 'function') locDanhSachDonHang();
+
+      } catch (err) {
+        alert('❌ Lỗi cập nhật thanh toán: ' + err.message);
+      }
+    }
   </script>
 </body>
 </html>
