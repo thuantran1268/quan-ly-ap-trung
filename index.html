@@ -368,7 +368,7 @@
         <div class="hang-nut">
           <button type="button" class="nut xanh-la" onclick="luuDonHang()"><i class="fas fa-save"></i> Lưu đơn</button>
           <button type="button" class="nut cam che" id="nut-huy-sua" onclick="huySua()"><i class="fas fa-times"></i> Hủy</button>
-          <button type="button" class="nut tim" onclick="taiVanBan()"><i class="fas fa-file-download"></i> Tải file</button>
+          <button type="button" class="nut tim" onclick="xuatFileThongKe()"><i class="fas fa-file-download"></i> Tải tất cả dữ liệu</button>
         </div>
       </form>
     </div>
@@ -1219,6 +1219,60 @@ function renderDanhSachDaGiao(dsDaGiao) {
         alert('❌ Lỗi cập nhật thanh toán: ' + err.message);
       }
     }
+    // ===== XUẤT FILE TẤT CẢ DỮ LIỆU KHÁCH HÀNG =====
+function xuatFileThongKe() {
+  const dsAll = window.danhSachDonHangGoc || [];
+  
+  if (dsAll.length === 0) {
+    alert('❌ Chưa có dữ liệu khách hàng nào để xuất file!');
+    return;
+  }
+
+  // 1. Tạo tiêu đề các cột cho file Excel/CSV
+  let csvContent = "STT,Ten Khach Hang,So Dien Thoai,Loai Ga,So Luong (con),Don Gia (d),Thanh Tien (d),Da Tra (d),Con No (d),Trang Thai Don,Ngay Dat,Ngay Giao\n";
+
+  // 2. Duyệt qua TẤT CẢ khách hàng (không lọc trạng thái)
+  dsAll.forEach((dh, index) => {
+    const soLuong = Number(dh.so_luong) || 0;
+    const donGia = Number(dh.don_gia) || 0;
+    const thanhTien = Number(dh.thanh_tien) || (soLuong * donGia);
+    const conNo = Number(dh.con_no) || 0;
+    const daTra = Math.max(0, thanhTien - conNo);
+    
+    // Xác định trạng thái nợ / đơn
+    let trangThai = '';
+    if (dh.da_giao) {
+      trangThai = (conNo > 0) ? "Da giao - Con no" : "Da giao - Da thanh toan";
+    } else {
+      trangThai = (conNo > 0) ? "Dang ap - Con no" : "Dang ap - Da coc/Tra đủ";
+    }
+
+    // Làm sạch tên và thông tin tránh lỗi dấu phẩy trong CSV
+    const tenKhach = `"${(dh.ten_khach || '').replace(/"/g, '""')}"`;
+    const sdt = `"${(dh.dien_thoai || dh.sdt || '').replace(/"/g, '""')}"`;
+    const loaiGa = `"${(dh.phan_loai || 'Ga xo').replace(/"/g, '""')}"`;
+    const ngayDat = dh.ngay_dat || '';
+    const ngayGiao = dh.ngay_giao_du_kien || dh.ngay_giao || '';
+
+    // Nối dòng
+    csvContent += `${index + 1},${tenKhach},${sdt},${loaiGa},${soLuong},${donGia},${thanhTien},${daTra},${conNo},${trangThai},${ngayDat},${ngayGiao}\n`;
+  });
+
+  // 3. Tạo file và kích hoạt tải về (hỗ trợ hiển thị đúng tiếng Việt / UTF-8 BOM)
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  
+  // Tên file kèm ngày tải
+  const homNay = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `Danh_Sach_Khach_Hang_Lo_Ap_${homNay}.csv`;
+  
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
   </script>
 </body>
 </html>
