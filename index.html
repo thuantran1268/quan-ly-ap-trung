@@ -291,9 +291,9 @@
                 <option value="Gà xô">Gà xô</option>
                 <option value="Gà mái">Gà mái</option>
                 <option value="Gà trống">Gà trống</option>
-            </select>
+              </select>
+            </div>
           </div>
-
           <div class="form-group">
             <label><i class="fas fa-money-bill-wave icon-xanh-la"></i> Tiền cọc đã nhận</label>
             <div class="khung-input">
@@ -613,44 +613,72 @@
       const tuKhoa = document.getElementById('tim-kiem-kh')?.value?.trim().toLowerCase() || '';
       const homNay = new Date(); homNay.setHours(0,0,0,0);
       const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
+      
       let tongTienCoc = 0, tongCongNo = 0;
       let dsSapGiao = [];
+      
+      // Khai báo biến gom tổng số trứng sắp vào ấp
+      let tongTrungSapAp = 0;
+      let chiTietGiaCacDonAp = [];
+
       tbody.innerHTML = '';
 
       const mangLoc = window.danhSachDonHangGoc || [];
       const ketQuaLoc = mangLoc.filter(dh => !tuKhoa || (dh.ten_khach || '').toLowerCase().includes(tuKhoa));
 
       ketQuaLoc.forEach(dh => {
-    tongTienCoc += dh.tien_coc || 0;
-    if ((dh.con_no || 0) > 0) tongCongNo += dh.con_no;
-    
-    // Khai báo các biến tên mới
-    const ngayDatHang = fmtNgay(dh.ngay_dat);
-    const ngayDuaTrungVaoAp = fmtNgay(dh.ngay_bat_dau_ap);
-    const ngayGiaoHang = fmtNgay(dh.ngay_giao_du_kien);
+        tongTienCoc += dh.tien_coc || 0;
+        if ((dh.con_no || 0) > 0) tongCongNo += dh.con_no;
+        
+        const ngayDatHang = fmtNgay(dh.ngay_dat);
+        const ngayDuaTrungVaoAp = fmtNgay(dh.ngay_bat_dau_ap);
+        const ngayGiaoHang = fmtNgay(dh.ngay_giao_du_kien);
 
-    if (dh.ngay_giao_du_kien && dh.trang_thai !== 'da-giao') {
-      const dGiao = new Date(dh.ngay_giao_du_kien);
-      dGiao.setHours(0,0,0,0);
-      const soNgay = Math.ceil((dGiao - homNay) / (1000*60*60*24));
-      
-      if (soNgay >= 0 && soNgay <= 7) {
-        // Sửa ngayGiao -> ngayGiaoHang ở 3 dòng dưới đây:
-        let vanBanThongBao = (soNgay === 0) ? `🔴 HÔM NAY giao: ${dh.ten_khach} (${ngayGiaoHang})` :
-                             (soNgay === 1) ? `🟡 NGÀY MAI giao: ${dh.ten_khach} (${ngayGiaoHang})` :
-                             `🟢 Còn ${soNgay} ngày: ${dh.ten_khach} (${ngayGiaoHang})`;
-        dsSapGiao.push(vanBanThongBao);
-      }
-    }
+        // 🟢 1. TÍNH TRỨNG CẦN VÀO ẤP (BÁO TRƯỚC 2 NGÀY)
+        if (dh.ngay_bat_dau_ap && dh.trang_thai !== 'da-giao') {
+          const dAp = new Date(dh.ngay_bat_dau_ap);
+          dAp.setHours(0,0,0,0);
+          
+          // Dùng Math.ceil để tính chuẩn xác số ngày còn lại
+          const soNgayDenNgayAp = Math.ceil((dAp - homNay) / (1000*60*60*24));
 
-    // 1. Đổi chữ hiển thị trạng thái khi chưa giao
+          // Đơn có ngày ấp từ Hôm nay (0 ngày), Ngày mai (1 ngày), hoặc Ngày kia (2 ngày) đều sẽ báo
+          if (soNgayDenNgayAp >= 0 && soNgayDenNgayAp <= 2) {
+            const sl = parseInt(dh.so_luong) || 0;
+            tongTrungSapAp += sl;
+            
+            let nhanNgay = '';
+            if (soNgayDenNgayAp === 0) nhanNgay = 'Hôm nay';
+            else if (soNgayDenNgayAp === 1) nhanNgay = 'Ngày mai';
+            else nhanNgay = 'Ngày kia';
+
+            chiTietGiaCacDonAp.push(`• <b>${dh.ten_khach}</b> (${dh.phan_loai || 'Gà xô'}): ${sl.toLocaleString('vi-VN')} con (${nhanNgay} ${ngayDuaTrungVaoAp})`);
+          }
+        }
+
+        // 🔴 2. TÍNH ĐƠN HÀNG SẮP ĐẾN NGÀY GIAO
+        if (dh.ngay_giao_du_kien && dh.trang_thai !== 'da-giao') {
+          const dGiao = new Date(dh.ngay_giao_du_kien);
+          dGiao.setHours(0,0,0,0);
+          const soNgay = Math.ceil((dGiao - homNay) / (1000*60*60*24));
+
+          if (soNgay >= 0 && soNgay <= 7) {
+            let vanBanThongBao = '';
+            if (soNgay === 0) vanBanThongBao = `🔴 <b>HÔM NAY GIAO:</b> ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
+            else if (soNgay === 1) vanBanThongBao = `📙 <b>NGÀY MAI GIAO:</b> ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
+            else vanBanThongBao = `⏰ Còn <b>${soNgay} ngày</b>: ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
+            dsSapGiao.push(vanBanThongBao);
+          }
+        }
+
+        // 🟡 3. ĐỊNH DẠNG TRẠNG THÁI & DỰNG BẢNG
         let trangThaiText = dh.trang_thai === 'da-giao' ? '✅ Đã giao' : (dh.con_no <= 0 ? '💵 Đã trả đủ' : '⏳ Chưa giao hàng');
         let trangThaiStyle = dh.trang_thai === 'da-giao' || dh.con_no <= 0 ? 'color:var(--xanh-la);font-weight:600;' : 'color:var(--do);font-weight:600;';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td data-label="Tên KH"><strong>${dh.ten_khach}</strong></td>
-          <td data-label="Phân loại">${dh.phan_loai || 'Chưa chọn'}</td>
+          <td data-label="Phân loại">${dh.phan_loai || 'Gà xô'}</td>
           <td data-label="Số lượng">${(dh.so_luong || 0).toLocaleString('vi-VN')} con</td>
           <td data-label="Ngày đặt hàng">${ngayDatHang}</td>
           <td data-label="Ngày vào trứng ấp" style="color:var(--tim);">${ngayDuaTrungVaoAp}</td>
@@ -668,22 +696,42 @@
         tbody.appendChild(tr);
       });
 
-      document.getElementById('tong-tien-coc').textContent = tongTienCoc.toLocaleString('vi') + ' đ';
-      document.getElementById('tong-cong-no').textContent = tongCongNo.toLocaleString('vi') + ' đ';
-
-      document.getElementById('so-thongbao').textContent = dsSapGiao.length;
+      // 4. HIỂN THỊ THÔNG BÁO TỔNG TRỨNG CẦN ẤP VÀO KHUNG POPUP
       const khungTB = document.getElementById('danh-sach-thongbao');
-      khungTB.innerHTML = '';
-      if (dsSapGiao.length > 0) {
-        dsSapGiao.forEach(tb => {
-          const div = document.createElement('div');
-          div.className = 'item-thongbao';
-          div.textContent = tb;
-          khungTB.appendChild(div);
-        });
-      } else {
-        khungTB.innerHTML = '<div class="item-thongbao" style="color:var(--xanh-la);">✅ Không có đơn giao trong 7 ngày tới</div>';
+      const chuongTB = document.getElementById('so-thongbao');
+      
+      if (khungTB) {
+        let htmlThongBao = '';
+        
+        // Thêm khối thông báo trứng sắp ấp
+        if (tongTrungSapAp > 0) {
+          htmlThongBao += `
+            <div class="item-thongbao" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px; margin-bottom: 10px; border-radius: 8px;">
+              <div style="color: #b45309; font-weight: bold; font-size: 13px; margin-bottom: 4px;">
+                🐣 TỔNG TRỨNG VÀO ẤP (2 NGÀY TỚI): ${tongTrungSapAp.toLocaleString('vi-VN')} TRỨNG
+              </div>
+              <div style="font-size: 12px; color: #4b5563; line-height: 1.5;">
+                ${chiTietGiaCacDonAp.join('<br>')}
+              </div>
+            </div>
+          `;
+        }
+
+        // Thêm khối thông báo đơn giao hàng
+        if (dsSapGiao.length > 0) {
+          htmlThongBao += dsSapGiao.map(item => `<div class="item-thongbao">${item}</div>`).join('');
+        }
+
+        khungTB.innerHTML = htmlThongBao || '<div class="item-thongbao">Không có thông báo mới</div>';
+        if (chuongTB) chuongTB.innerText = (tongTrungSapAp > 0 ? 1 : 0) + dsSapGiao.length;
       }
+
+      // 5. CẬP NHẬT TỔNG CỌC VÀ CÔNG NỢ RA MÀN HÌNH
+      const elTongCoc = document.getElementById('tong-tien-coc');
+      const elTongNo = document.getElementById('tong-cong-no');
+
+      if (elTongCoc) elTongCoc.innerText = tongTienCoc.toLocaleString('vi-VN') + ' đ';
+      if (elTongNo) elTongNo.innerText = tongCongNo.toLocaleString('vi-VN') + ' đ';
     }
 
     // ===== SỬA / HỦY / XÓA ĐƠN HÀNG =====
