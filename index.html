@@ -21,6 +21,7 @@
       --xam-nen: #f8fafc;
       --border-color: #e2e8f0;
     }
+    
     body { background: var(--xam-nen); color: var(--den); padding-bottom: 40px; margin: 0; font-size: 14px; line-height: 1.5; }
 
     /* ===== HEADER STICKY ===== */
@@ -37,9 +38,20 @@
       height: 56px;
     }
     .thanh-dn h1 { font-size: 15px; font-weight: 700; color: var(--xanh); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-    .thanh-phai { display: flex; align-items: center; gap: 10px; }
-    .chuong-thongbao { position: relative; font-size: 20px; cursor: pointer; color: var(--xanh); padding: 4px; }
-    .so-thongbao { position: absolute; top: -2px; right: -4px; background: var(--do); color: #fff; font-size: 10px; font-weight: bold; padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center; }
+    .thanh-phai { display: flex; align-items: center; gap: 12px; }
+    
+    /* Biểu tượng Lịch sử & Thông báo trên Header */
+    .icon-header-btn {
+      position: relative;
+      font-size: 18px;
+      cursor: pointer;
+      color: #475569;
+      padding: 6px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .icon-header-btn:hover { background: #f1f5f9; color: var(--xanh); }
+    .so-thongbao { position: absolute; top: 0px; right: -2px; background: var(--do); color: #fff; font-size: 10px; font-weight: bold; padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center; }
     
     .nut { padding: 8px 14px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; transition: all .2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
     .nut:active { transform: scale(0.98); }
@@ -50,13 +62,13 @@
     .nut.tim { background: var(--tim); color: #fff; }
     .nut.nho { padding: 6px 10px; font-size: 12px; border-radius: 6px; }
 
-    /* ===== KHUNG POPUP ===== */
+    /* ===== KHUNG POPUP TÙY CHỈNH & THÔNG BÁO ===== */
     .khung-thongbao { position: fixed; top: 60px; right: 12px; width: calc(100% - 24px); max-width: 340px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.15); padding: 16px; z-index: 999; display: none; max-height: 80vh; overflow-y: auto; }
     .khung-thongbao.hien { display: block; }
     .khung-thongbao h4 { margin-bottom: 10px; color: var(--cam); font-size: 15px; }
     .item-thongbao { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
 
-    /* ===== DẠNG KHUNG FORM ===== */
+    /* ===== FORM ĐĂNG NHẬP / ĐĂNG KÝ ===== */
     .khung { max-width: 420px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,.05); border: 1px solid var(--border-color); }
     .khung h2 { text-align: center; margin-bottom: 16px; color: var(--xanh); font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .khung label { font-size: 13px; font-weight: 600; color: #4b5563; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; margin-top: 10px; }
@@ -71,7 +83,7 @@
     .thong-bao.loi { background: #fee2e2; color: #b91c1c; display: block; }
     .thong-bao.thanh-cong { background: #dcfce7; color: #166534; display: block; }
 
-    /* ===== NỘI DUNG CHÍNH (LAYOUT VÀ BỐ CỤC TỐI ƯU) ===== */
+    /* ===== NỘI DUNG CHÍNH ===== */
     .noi-dung { display: none; padding: 12px; max-width: 1000px; margin: 0 auto; }
     .noi-dung.hien { display: block; }
     .the { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.05); border: 1px solid var(--border-color); }
@@ -87,7 +99,7 @@
     /* THÔNG TIN TÀI KHOẢN */
     .thong-tin-tk { background: #fff; padding: 12px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); font-size: 13px; line-height: 1.6; }
 
-    /* LƯỚI ĐIỀN FORM DI ĐỘNG & MÁY TÍNH BẢNG */
+    /* LƯỚI FORM DI ĐỘNG */
     .form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
     @media (min-width: 640px) {
       .form-grid { grid-template-columns: 1fr 1fr; }
@@ -112,7 +124,7 @@
     .tom-tat .muc.xanh-la .so { color: var(--xanh-la); }
     .tom-tat .muc.do .so { color: var(--do); }
 
-    /* ===== BẢNG DỮ LIỆU & RESPONSIVE CHUẨN ===== */
+    /* ===== BẢNG DỮ LIỆU ===== */
     .khung-bang { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; }
     .danh-sach { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
     .danh-sach th, .danh-sach td { padding: 10px 8px; text-align: left; border: 1px solid #e2e8f0; vertical-align: middle; }
@@ -124,11 +136,11 @@
     .da-giao { color: var(--xanh-la); }
     .xoa { color: var(--do); }
 
-    /* TỐI ƯU CHO ĐIỆN THOẠI (DẠNG THẺ CARD) */
+    /* RESPONSIVE DI ĐỘNG */
     @media (max-width: 767px) {
       body { padding-bottom: 20px; }
       .thanh-dn h1 { font-size: 14px; }
-      #email-nguoi-dung { max-width: 90px !important; }
+      #email-nguoi-dung { max-width: 80px !important; }
       
       .danh-sach, .danh-sach thead, .danh-sach tbody, .danh-sach th, .danh-sach td, .danh-sach tr { display: block; }
       .danh-sach thead { display: none; }
@@ -138,7 +150,6 @@
       .danh-sach td::before { content: attr(data-label); font-weight: 600; color: #64748b; text-align: left; flex-shrink: 0; padding-right: 10px; }
     }
 
-    /* ĐỒNG BỘ GIAO DIỆN KHUNG NHẬP LIỆU VÀ CHỌN PHÂN LOẠI */
     .form-group select.form-control, 
     .khung-input select.form-control {
       width: 100%;
@@ -149,33 +160,62 @@
       outline: none;
       background-color: #ffffff;
       box-sizing: border-box;
-      transition: border-color 0.2s, box-shadow 0.2s;
       height: 42px; 
     }
-
-    .form-group select.form-control:focus,
-    .khung-input select.form-control:focus {
-      border-color: var(--xanh);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    }
-</style>
   </style>
 </head>
 <body>
 
+  <!-- HEADER THANH TÊN VÀ NÚT ĐIỀU HƯỚNG -->
   <header class="thanh-dn">
     <h1><i class="fas fa-egg icon-dong"></i> Quản Lý Lò Ấp</h1>
     <div class="thanh-phai">
-        <button class="nut nho" id="nut-cai-dat" onclick="hienCaiDat()" title="Cài đặt">⚙️</button>
-        <div class="chuong-thongbao" onclick="hienThongBao()">
+        <!-- Biểu tượng Lịch Sử Đã Giao -->
+        <div class="icon-header-btn" onclick="moModalLichSuGiao()" title="Xem lịch sử đơn hàng đã giao">
+            <i class="fas fa-history"></i>
+        </div>
+
+        <!-- Biểu tượng Cài Đặt -->
+        <div class="icon-header-btn" id="nut-cai-dat" onclick="hienCaiDat()" title="Cài đặt">
+            <i class="fas fa-cog"></i>
+        </div>
+
+        <!-- Biểu tượng Thông Báo -->
+        <div class="icon-header-btn" onclick="hienThongBao()" title="Thông báo">
             <i class="fas fa-bell"></i>
             <span class="so-thongbao" id="so-thongbao">0</span>
         </div>
+
         <span id="email-nguoi-dung" style="font-size:12px; font-weight:500; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
         <button class="nut do nho" id="nut-dang-xuat" style="display:none;" onclick="dangXuat()">Thoát</button>
     </div>
   </header>
 
+  <!-- POPUP BẢNG LỊCH SỬ ĐƠN HÀNG ĐÃ GIAO -->
+  <div id="modal-lich-su-giao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:20px; border-radius:12px; width:95%; max-width:800px; max-height:85vh; overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">
+        <h3 style="margin:0; color:#16a34a; font-size:16px;"><i class="fas fa-check-circle"></i> LỊCH SỬ ĐƠN HÀNG ĐÃ GIAO</h3>
+        <button onclick="dongModalLichSuGiao()" style="border:none; background:none; font-size:20px; cursor:pointer; color:#64748b;">❌</button>
+      </div>
+      <div class="khung-bang">
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="background:#f0fdf4; text-align:left; color:#166534;">
+              <th style="padding:8px; border:1px solid #cbd5e1;">Khách hàng</th>
+              <th style="padding:8px; border:1px solid #cbd5e1;">Phân loại</th>
+              <th style="padding:8px; border:1px solid #cbd5e1;">Số lượng</th>
+              <th style="padding:8px; border:1px solid #cbd5e1;">Thành tiền</th>
+              <th style="padding:8px; border:1px solid #cbd5e1;">Trạng thái nợ</th>
+            </tr>
+          </thead>
+          <tbody id="tb-danh-sach-da-giao"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP CÀI ĐẶT -->
   <div class="khung-thongbao" id="khung-cai-dat">
       <h4><i class="fas fa-sliders-h"></i> Tùy chỉnh hiển thị</h4>
       <div style="padding: 4px 0;">
@@ -189,11 +229,13 @@
       </div>
   </div>
 
+  <!-- POPUP THÔNG BÁO -->
   <div class="khung-thongbao" id="khung-thongbao">
     <h4><i class="fas fa-bell icon-cam"></i> Đơn hàng sắp giao</h4>
     <div id="danh-sach-thongbao"></div>
   </div>
 
+  <!-- ĐĂNG NHẬP -->
   <div class="khung" id="khung-dang-nhap">
     <h2><i class="fas fa-lock"></i> Đăng nhập hệ thống</h2>
     <div class="thong-bao" id="tb-dn"></div>
@@ -213,6 +255,7 @@
     <div class="chuyen-form" style="margin-top:6px; font-size:12px;">Là quản trị viên? <a onclick="hienDangNhapAdmin()">Đăng nhập Admin</a></div>
   </div>
 
+  <!-- ĐĂNG KÝ -->
   <div class="khung" id="khung-dang-ky" style="display:none;">
     <h2><i class="fas fa-user-plus icon-xanh-la"></i> Đăng ký tài khoản</h2>
     <div class="thong-bao" id="tb-dk"></div>
@@ -246,6 +289,7 @@
     <div class="chuyen-form">Đã có tài khoản? <a onclick="hienDangNhap()">Đăng nhập</a></div>
   </div>
 
+  <!-- NỘI DUNG CHÍNH -->
   <main class="noi-dung" id="noi-dung-chinh">
     <div class="thong-tin-tk" id="thong-tin-tk">
       <strong>👤 Thông tin tài khoản</strong><br/>
@@ -348,8 +392,28 @@
       </div>
     </div>
 
+    <!-- KHUNG SỔ TỔNG HỢP CÔNG NỢ KHÁCH HÀNG -->
+    <div id="khung-chi-tiet-no" style="display:none; margin-bottom:12px; background:#fff; padding:15px; border-radius:10px; border:1px solid #fca5a5; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #fee2e2; padding-bottom:8px;">
+        <h3 style="margin:0; color:#dc2626; font-size:16px;">📋 SỔ TỔNG HỢP CÔNG NỢ KHÁCH HÀNG</h3>
+        <button onclick="document.getElementById('khung-chi-tiet-no').style.display='none'" style="border:none; background:none; font-size:18px; cursor:pointer;">❌</button>
+      </div>
+      <table style="width:100%; border-collapse:collapse; font-size:14px;">
+        <thead>
+          <tr style="background:#fef2f2; text-align:left; color:#991b1b;">
+            <th style="padding:8px;">Khách hàng</th>
+            <th style="padding:8px;">Chi tiết đơn nợ</th>
+            <th style="padding:8px;">Số tiền nợ</th>
+            <th style="padding:8px; text-align:center;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="tb-danh-sach-no"></tbody>
+      </table>
+    </div>
+
+    <!-- DANH SÁCH ĐƠN HÀNG CHỜ GIAO -->
     <div class="the">
-      <h3><i class="fas fa-list-alt icon-tim"></i> Danh sách đơn hàng</h3>
+      <h3><i class="fas fa-list-alt icon-tim"></i> Danh sách đơn hàng chờ giao</h3>
       <div class="khung-bang">
         <table class="danh-sach">
           <thead>
@@ -396,6 +460,25 @@
       </div>
     </div>
   </main>
+
+  <!-- POPUP NHẬP TIỀN KHI BẤM ĐÃ GIAO -->
+  <div id="modal-giao-hang" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+      <h3 style="margin-top:0; color:#1e293b;">✅ XÁC NHẬN GIAO HÀNG</h3>
+      <p id="txt-thong-tin-don" style="font-size:14px; color:#475569; margin-bottom:15px;"></p>
+      
+      <input type="hidden" id="giao-key-don">
+      <input type="hidden" id="giao-con-no-goc">
+
+      <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">Số tiền khách thanh toán thêm (đ):</label>
+      <input type="number" id="inp-tien-thu" placeholder="Nhập số tiền..." style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-size:16px; font-weight:bold; color:#16a34a; box-sizing:border-box; margin-bottom:15px;">
+
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button onclick="dongModalGiaoHang()" style="padding:8px 16px; border:none; background:#e2e8f0; border-radius:6px; cursor:pointer;">Hủy</button>
+        <button onclick="xacNhanHoanTatGiaoHang()" style="padding:8px 16px; border:none; background:#16a34a; color:#fff; font-weight:bold; border-radius:6px; cursor:pointer;">Hoàn tất</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     // ===== CẤU HÌNH FIREBASE =====
@@ -549,6 +632,7 @@
       const tenKH = document.getElementById('ten-kh').value.trim();
       const soLuong = parseInt(document.getElementById('so-luong').value) || 0;
       const giaMotCon = parseInt(document.getElementById('gia-mot-con').value) || 0;
+      const phanLoai = document.getElementById('phan_loai').value;
       const ngayDat = document.getElementById('ngay-dat').value;
       const ngayGiao = document.getElementById('ngay-giao-du-kien').value;
       const tienCoc = parseInt(document.getElementById('tien-coc').value) || 0;
@@ -563,10 +647,10 @@
       const ngayBatDauAp = dGiao.toISOString().split('T')[0];
       const thanhTien = soLuong * giaMotCon;
       const conNo = thanhTien - tienCoc;
-      const trangThai = conNo <= 0 ? 'da-tra' : 'chua-tra';
+      const trangThai = 'chua-giao';
 
       const duLieu = {
-        ten_khach: tenKH, so_luong: soLuong, gia_mot_con: giaMotCon,
+        ten_khach: tenKH, so_luong: soLuong, gia_mot_con: giaMotCon, phan_loai: phanLoai,
         thanh_tien: thanhTien, tien_coc: tienCoc, con_no: conNo,
         ngay_dat: ngayDat, ngay_bat_dau_ap: ngayBatDauAp,
         ngay_giao_du_kien: ngayGiao, trang_thai: trangThai
@@ -614,127 +698,286 @@
       const homNay = new Date(); homNay.setHours(0,0,0,0);
       const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
       
-      let tongTienCoc = 0, tongCongNo = 0;
+      let tongTienCoc = 0;
+      let tongCongNo = 0;
       let dsSapGiao = [];
+      let dsKhachHangNo = [];
+      let dsDaGiao = [];
       
-      // Khai báo biến gom tổng số trứng sắp vào ấp
       let tongTrungSapAp = 0;
       let chiTietGiaCacDonAp = [];
 
       tbody.innerHTML = '';
-
       const mangLoc = window.danhSachDonHangGoc || [];
-      const ketQuaLoc = mangLoc.filter(dh => !tuKhoa || (dh.ten_khach || '').toLowerCase().includes(tuKhoa));
 
-      ketQuaLoc.forEach(dh => {
-        tongTienCoc += dh.tien_coc || 0;
-        if ((dh.con_no || 0) > 0) tongCongNo += dh.con_no;
-        
-        const ngayDatHang = fmtNgay(dh.ngay_dat);
-        const ngayDuaTrungVaoAp = fmtNgay(dh.ngay_bat_dau_ap);
-        const ngayGiaoHang = fmtNgay(dh.ngay_giao_du_kien);
+      mangLoc.forEach(dh => {
+        const trangThaiStr = (dh.trang_thai || '').toString().trim().toLowerCase();
+        const daGiao = trangThaiStr === 'da-giao';
+        const tienCoc = Number(dh.tien_coc) || 0;
+        const conNo = Number(dh.con_no) || 0;
+        const khachKhopTuKhoa = !tuKhoa || (dh.ten_khach || '').toLowerCase().includes(tuKhoa);
 
-        // 🟢 1. TÍNH TRỨNG CẦN VÀO ẤP (BÁO TRƯỚC 2 NGÀY)
-        if (dh.ngay_bat_dau_ap && dh.trang_thai !== 'da-giao') {
-          const dAp = new Date(dh.ngay_bat_dau_ap);
-          dAp.setHours(0,0,0,0);
+        // TÁCH ĐƠN ĐÃ GIAO ĐỂ HIỂN THỊ TRONG POPUP LỊCH SỬ
+        if (daGiao) {
+          if (khachKhopTuKhoa) dsDaGiao.push(dh);
+          return;
+        }
+
+        // ĐƠN CHƯA GIAO
+        if (khachKhopTuKhoa) {
+          tongTienCoc += tienCoc;
           
-          // Dùng Math.ceil để tính chuẩn xác số ngày còn lại
-          const soNgayDenNgayAp = Math.ceil((dAp - homNay) / (1000*60*60*24));
-
-          // Đơn có ngày ấp từ Hôm nay (0 ngày), Ngày mai (1 ngày), hoặc Ngày kia (2 ngày) đều sẽ báo
-          if (soNgayDenNgayAp >= 0 && soNgayDenNgayAp <= 2) {
-            const sl = parseInt(dh.so_luong) || 0;
-            tongTrungSapAp += sl;
-            
-            let nhanNgay = '';
-            if (soNgayDenNgayAp === 0) nhanNgay = 'Hôm nay';
-            else if (soNgayDenNgayAp === 1) nhanNgay = 'Ngày mai';
-            else nhanNgay = 'Ngày kia';
-
-            chiTietGiaCacDonAp.push(`• <b>${dh.ten_khach}</b> (${dh.phan_loai || 'Gà xô'}): ${sl.toLocaleString('vi-VN')} con (${nhanNgay} ${ngayDuaTrungVaoAp})`);
+          if (conNo > 0) {
+            tongCongNo += conNo;
+            dsKhachHangNo.push(dh);
           }
-        }
 
-        // 🔴 2. TÍNH ĐƠN HÀNG SẮP ĐẾN NGÀY GIAO
-        if (dh.ngay_giao_du_kien && dh.trang_thai !== 'da-giao') {
-          const dGiao = new Date(dh.ngay_giao_du_kien);
-          dGiao.setHours(0,0,0,0);
-          const soNgay = Math.ceil((dGiao - homNay) / (1000*60*60*24));
+          const ngayDatHang = fmtNgay(dh.ngay_dat);
+          const ngayDuaTrungVaoAp = fmtNgay(dh.ngay_bat_dau_ap);
+          const ngayGiaoHang = fmtNgay(dh.ngay_giao_du_kien);
 
-          if (soNgay >= 0 && soNgay <= 7) {
-            let vanBanThongBao = '';
-            if (soNgay === 0) vanBanThongBao = `🔴 <b>HÔM NAY GIAO:</b> ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
-            else if (soNgay === 1) vanBanThongBao = `📙 <b>NGÀY MAI GIAO:</b> ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
-            else vanBanThongBao = `⏰ Còn <b>${soNgay} ngày</b>: ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
-            dsSapGiao.push(vanBanThongBao);
+          if (dh.ngay_bat_dau_ap) {
+            const dAp = new Date(dh.ngay_bat_dau_ap);
+            dAp.setHours(0,0,0,0);
+            const soNgayDenNgayAp = Math.ceil((dAp - homNay) / (1000*60*60*24));
+
+            if (soNgayDenNgayAp >= 0 && soNgayDenNgayAp <= 2) {
+              const sl = parseInt(dh.so_luong) || 0;
+              tongTrungSapAp += sl;
+              let nhanNgay = soNgayDenNgayAp === 0 ? 'Hôm nay' : (soNgayDenNgayAp === 1 ? 'Ngày mai' : 'Ngày kia');
+              chiTietGiaCacDonAp.push(`• <b>${dh.ten_khach}</b> (${dh.phan_loai || 'Gà xô'}): ${sl.toLocaleString('vi-VN')} con (${nhanNgay} ${ngayDuaTrungVaoAp})`);
+            }
           }
+
+          if (dh.ngay_giao_du_kien) {
+            const dGiao = new Date(dh.ngay_giao_du_kien);
+            dGiao.setHours(0,0,0,0);
+            const soNgay = Math.ceil((dGiao - homNay) / (1000*60*60*24));
+
+            if (soNgay >= 0 && soNgay <= 7) {
+              let vanBanThongBao = '';
+              if (soNgay === 0) vanBanThongBao = `🔴 <b>HÔM NAY GIAO:</b> ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
+              else if (soNgay === 1) vanBanThongBao = `📙 <b>NGÀY MAI GIAO:</b> ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
+              else vanBanThongBao = `⏰ Còn <b>${soNgay} ngày</b>: ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
+              dsSapGiao.push(vanBanThongBao);
+            }
+          }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td data-label="Tên KH"><strong>${dh.ten_khach}</strong></td>
+            <td data-label="Phân loại">${dh.phan_loai || 'Gà xô'}</td>
+            <td data-label="Số lượng">${(dh.so_luong || 0).toLocaleString('vi-VN')} con</td>
+            <td data-label="Ngày đặt">${ngayDatHang}</td>
+            <td data-label="Ngày vào ấp" style="color:var(--tim);">${ngayDuaTrungVaoAp}</td>
+            <td data-label="Ngày giao">${ngayGiaoHang}</td>
+            <td data-label="Thành tiền">${(dh.thanh_tien || 0).toLocaleString('vi-VN')} đ</td>
+            <td data-label="Tiền cọc">${tienCoc.toLocaleString('vi-VN')} đ</td>
+            <td data-label="Còn nợ" style="color:var(--do);font-weight:bold;">${conNo.toLocaleString('vi-VN')} đ</td>
+            <td data-label="Trạng thái"><span style="color:var(--do);font-weight:600;">⏳ Chưa giao</span></td>
+            <td data-label="Thao tác">
+              <span class="sua" onclick="suaDonHang('${dh.key}')" title="Sửa">✏️</span>
+              <span class="da-giao" onclick="moModalGiaoHang('${dh.key}')" title="Xác nhận giao hàng & Thu tiền">✅</span>
+              <span class="xoa" onclick="xoaDonHang('${dh.key}')" title="Xóa">🗑️</span>
+            </td>
+          `;
+          tbody.appendChild(tr);
         }
-
-        // 🟡 3. ĐỊNH DẠNG TRẠNG THÁI & DỰNG BẢNG
-        let trangThaiText = dh.trang_thai === 'da-giao' ? '✅ Đã giao' : (dh.con_no <= 0 ? '💵 Đã trả đủ' : '⏳ Chưa giao hàng');
-        let trangThaiStyle = dh.trang_thai === 'da-giao' || dh.con_no <= 0 ? 'color:var(--xanh-la);font-weight:600;' : 'color:var(--do);font-weight:600;';
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td data-label="Tên KH"><strong>${dh.ten_khach}</strong></td>
-          <td data-label="Phân loại">${dh.phan_loai || 'Gà xô'}</td>
-          <td data-label="Số lượng">${(dh.so_luong || 0).toLocaleString('vi-VN')} con</td>
-          <td data-label="Ngày đặt hàng">${ngayDatHang}</td>
-          <td data-label="Ngày vào trứng ấp" style="color:var(--tim);">${ngayDuaTrungVaoAp}</td>
-          <td data-label="Ngày giao hàng">${ngayGiaoHang}</td>
-          <td data-label="Thành tiền">${(dh.thanh_tien || 0).toLocaleString('vi-VN')} đ</td>
-          <td data-label="Tiền cọc">${(dh.tien_coc || 0).toLocaleString('vi-VN')} đ</td>
-          <td data-label="Còn nợ" style="${trangThaiStyle}">${(dh.con_no || 0).toLocaleString('vi-VN')} đ</td>
-          <td data-label="Trạng thái"><span style="${trangThaiStyle}">${trangThaiText}</span></td>
-          <td data-label="Thao tác">
-            <span class="sua" onclick="suaDonHang('${dh.key}')" title="Sửa">✏️</span>
-            <span class="da-giao" onclick="danhDauDaGiao('${dh.key}')" title="Đã giao">✅</span>
-            <span class="xoa" onclick="xoaDonHang('${dh.key}')" title="Xóa">🗑️</span>
-          </td>
-        `;
-        tbody.appendChild(tr);
       });
 
-      // 4. HIỂN THỊ THÔNG BÁO TỔNG TRỨNG CẦN ẤP VÀO KHUNG POPUP
+      renderSookhoangNo(dsKhachHangNo);
+      renderDanhSachDaGiao(dsDaGiao);
+
       const khungTB = document.getElementById('danh-sach-thongbao');
       const chuongTB = document.getElementById('so-thongbao');
-      
       if (khungTB) {
         let htmlThongBao = '';
-        
-        // Thêm khối thông báo trứng sắp ấp
         if (tongTrungSapAp > 0) {
           htmlThongBao += `
-            <div class="item-thongbao" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px; margin-bottom: 10px; border-radius: 8px;">
-              <div style="color: #b45309; font-weight: bold; font-size: 13px; margin-bottom: 4px;">
+            <div class="item-thongbao" style="background:#fef3c7; border-left:4px solid #f59e0b; padding:10px; margin-bottom:10px; border-radius:8px;">
+              <div style="color:#b45309; font-weight:bold; font-size:13px; margin-bottom:4px;">
                 🐣 TỔNG TRỨNG VÀO ẤP (2 NGÀY TỚI): ${tongTrungSapAp.toLocaleString('vi-VN')} TRỨNG
               </div>
-              <div style="font-size: 12px; color: #4b5563; line-height: 1.5;">
-                ${chiTietGiaCacDonAp.join('<br>')}
-              </div>
-            </div>
-          `;
+              <div style="font-size:12px; color:#4b5563; line-height:1.5;">${chiTietGiaCacDonAp.join('<br>')}</div>
+            </div>`;
         }
-
-        // Thêm khối thông báo đơn giao hàng
         if (dsSapGiao.length > 0) {
           htmlThongBao += dsSapGiao.map(item => `<div class="item-thongbao">${item}</div>`).join('');
         }
-
         khungTB.innerHTML = htmlThongBao || '<div class="item-thongbao">Không có thông báo mới</div>';
         if (chuongTB) chuongTB.innerText = (tongTrungSapAp > 0 ? 1 : 0) + dsSapGiao.length;
       }
 
-      // 5. CẬP NHẬT TỔNG CỌC VÀ CÔNG NỢ RA MÀN HÌNH
       const elTongCoc = document.getElementById('tong-tien-coc');
       const elTongNo = document.getElementById('tong-cong-no');
 
       if (elTongCoc) elTongCoc.innerText = tongTienCoc.toLocaleString('vi-VN') + ' đ';
-      if (elTongNo) elTongNo.innerText = tongCongNo.toLocaleString('vi-VN') + ' đ';
+      if (elTongNo) {
+        elTongNo.innerText = tongCongNo.toLocaleString('vi-VN') + ' đ';
+        elTongNo.style.cursor = 'pointer';
+        elTongNo.title = 'Bấm để xem chi tiết danh sách khách nợ';
+        elTongNo.onclick = () => {
+          const khung = document.getElementById('khung-chi-tiet-no');
+          if (khung) khung.style.display = khung.style.display === 'none' ? 'block' : 'none';
+        };
+      }
     }
 
-    // ===== SỬA / HỦY / XÓA ĐƠN HÀNG =====
+    // ===== POPUP ĐƠN HÀNG ĐÃ GIAO =====
+    function moModalLichSuGiao() {
+      document.getElementById('modal-lich-su-giao').style.display = 'flex';
+    }
+    function dongModalLichSuGiao() {
+      document.getElementById('modal-lich-su-giao').style.display = 'none';
+    }
+
+    // ===== POPUP XÁC NHẬN GIAO HÀNG =====
+    function moModalGiaoHang(key) {
+      const dh = (window.danhSachDonHangGoc || []).find(item => item.key === key);
+      if (!dh) return;
+
+      document.getElementById('giao-key-don').value = key;
+      document.getElementById('giao-con-no-goc').value = dh.con_no || 0;
+      document.getElementById('txt-thong-tin-don').innerHTML = `Khách hàng: <b>${dh.ten_khach}</b><br>Còn nợ đơn hàng: <b style="color:#dc2626;">${(dh.con_no || 0).toLocaleString('vi-VN')} đ</b>`;
+      
+      document.getElementById('inp-tien-thu').value = dh.con_no || 0; 
+      document.getElementById('modal-giao-hang').style.display = 'flex';
+    }
+
+    function dongModalGiaoHang() {
+      document.getElementById('modal-giao-hang').style.display = 'none';
+    }
+
+    async function xacNhanHoanTatGiaoHang() {
+      const key = document.getElementById('giao-key-don').value;
+      const conNoGoc = parseFloat(document.getElementById('giao-con-no-goc').value) || 0;
+      const tienKhachTra = parseFloat(document.getElementById('inp-tien-thu').value) || 0;
+
+      const conNoMoi = Math.max(0, conNoGoc - tienKhachTra);
+
+      if (window.danhSachDonHangGoc) {
+        const itemIndex = window.danhSachDonHangGoc.findIndex(item => item.key === key);
+        if (itemIndex !== -1) {
+          window.danhSachDonHangGoc[itemIndex].trang_thai = 'da-giao';
+          window.danhSachDonHangGoc[itemIndex].con_no = conNoMoi;
+        }
+      }
+
+      dongModalGiaoHang();
+
+      try {
+        if (UID && key) {
+          await db.ref('nguoi_dung/' + UID + '/don_hang/' + key).update({
+            trang_thai: 'da-giao',
+            con_no: conNoMoi,
+            ngay_giao_thuc_te: new Date().toISOString().split('T')[0]
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi cập nhật Firebase:", err);
+        alert('❌ Đã xảy ra lỗi khi lưu vào cơ sở dữ liệu!');
+      }
+
+      if (typeof locDanhSachDonHang === 'function') {
+        locDanhSachDonHang();
+      }
+    }
+
+    // ===== RENDER SỔ CÔNG NỢ CHI TIẾT =====
+    function renderSookhoangNo(dsKhachHangNo) {
+      const tbodyNo = document.getElementById('tb-danh-sach-no');
+      if (!tbodyNo) return;
+      tbodyNo.innerHTML = '';
+
+      if (dsKhachHangNo.length === 0) {
+        tbodyNo.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:15px; color:#64748b;">Không có khách hàng nào còn nợ.</td></tr>';
+        return;
+      }
+
+      dsKhachHangNo.forEach(dh => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #fee2e2';
+        tr.innerHTML = `
+          <td style="padding:8px;"><b>${dh.ten_khach}</b></td>
+          <td style="padding:8px;">${dh.phan_loai || 'Gà xô'} (${(dh.so_luong||0).toLocaleString('vi-VN')} con)</td>
+          <td style="padding:8px; color:#dc2626; font-weight:bold;">${(dh.con_no||0).toLocaleString('vi-VN')} đ</td>
+          <td style="padding:8px; text-align:center;">
+            <button class="nut xanh-la nho" onclick="thuHetNoKhach('${dh.key}')">💵 Thu hết nợ</button>
+          </td>
+        `;
+        tbodyNo.appendChild(tr);
+      });
+    }
+
+    // ===== RENDER LỊCH SỬ ĐÃ GIAO (TRONG MODAL POPUP) =====
+    // ===== RENDER LỊCH SỬ ĐÃ GIAO (TRONG MODAL POPUP) =====
+// ===== RENDER LỊCH SỬ ĐÃ GIAO (TRONG MODAL POPUP) =====
+function renderDanhSachDaGiao(dsDaGiao) {
+  const tbodyDaGiao = document.getElementById('tb-danh-sach-da-giao');
+  if (!tbodyDaGiao) return;
+  tbodyDaGiao.innerHTML = '';
+
+  // 1. Xóa tfoot cũ nếu đã tồn tại để tránh trùng lặp
+  const table = tbodyDaGiao.closest('table');
+  let tfoot = table.querySelector('tfoot');
+  if (tfoot) tfoot.remove();
+
+  if (dsDaGiao.length === 0) {
+    tbodyDaGiao.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; color:#64748b;">Chưa có đơn hàng nào đã giao.</td></tr>';
+    return;
+  }
+
+  let tongConNo = 0;
+
+  // 2. Duyệt danh sách và cộng dồn nợ
+  dsDaGiao.forEach(dh => {
+    const conNo = Number(dh.con_no) || 0;
+    tongConNo += conNo;
+
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #f1f5f9';
+    tr.innerHTML = `
+      <td style="padding:8px; border:1px solid #e2e8f0;"><b>${dh.ten_khach}</b></td>
+      <td style="padding:8px; border:1px solid #e2e8f0;">${dh.phan_loai || 'Gà xô'}</td>
+      <td style="padding:8px; border:1px solid #e2e8f0;">${(dh.so_luong||0).toLocaleString('vi-VN')} con</td>
+      <td style="padding:8px; border:1px solid #e2e8f0;">${(dh.thanh_tien||0).toLocaleString('vi-VN')} đ</td>
+      <td style="padding:8px; border:1px solid #e2e8f0;">
+        ${conNo === 0 
+          ? '<span style="color:#16a34a; font-weight:bold;">🟢 Đã trả đủ</span>' 
+          : `<span style="color:#dc2626; font-weight:bold;">🔴 Còn nợ ${(conNo).toLocaleString('vi-VN')} đ</span>`}
+      </td>
+    `;
+    tbodyDaGiao.appendChild(tr);
+  });
+
+  // 3. Tạo hàng TỔNG CỘNG dư nợ ở cuối bảng
+  tfoot = document.createElement('tfoot');
+  tfoot.innerHTML = `
+    <tr style="background:#f1f5f9; font-weight:bold;">
+      <td colspan="4" style="padding:10px 8px; border:1px solid #cbd5e1; text-align:right; color:#1e293b;">
+        TỔNG DƯ NỢ CÁC ĐƠN ĐÃ GIAO:
+      </td>
+      <td style="padding:10px 8px; border:1px solid #cbd5e1; color:${tongConNo > 0 ? '#dc2626' : '#16a34a'}; font-size:14px;">
+        ${tongConNo > 0 ? tongConNo.toLocaleString('vi-VN') + ' đ' : '0 đ'}
+      </td>
+    </tr>
+  `;
+  
+  // Chèn đúng cấu trúc HTML chuẩn (ngay sau tbody)
+  tbodyDaGiao.insertAdjacentElement('afterend', tfoot);
+}
+
+    async function thuHetNoKhach(key) {
+      if (confirm('💰 Xác nhận khách đã thanh toán TOÀN BỘ số nợ còn lại?')) {
+        try {
+          await db.ref('nguoi_dung/' + UID + '/don_hang/' + key).update({ con_no: 0 });
+          if (typeof locDanhSachDonHang === 'function') locDanhSachDonHang();
+        } catch (err) {
+          alert('❌ Lỗi cập nhật nợ: ' + err.message);
+        }
+      }
+    }
+
     async function suaDonHang(key) {
       const dh = await db.ref('nguoi_dung/'+UID+'/don_hang/'+key).once('value');
       const d = dh.val();
@@ -747,6 +990,7 @@
       document.getElementById('ten-kh').value = d.ten_khach || '';
       document.getElementById('so-luong').value = d.so_luong || '';
       document.getElementById('gia-mot-con').value = d.gia_mot_con || '';
+      if (document.getElementById('phan_loai')) document.getElementById('phan_loai').value = d.phan_loai || 'Gà xô';
       document.getElementById('ngay-dat').value = d.ngay_dat || '';
       document.getElementById('ngay-giao-du-kien').value = d.ngay_giao_du_kien || '';
       document.getElementById('tien-coc').value = d.tien_coc || '';
@@ -768,19 +1012,12 @@
       document.getElementById('ngay-bat-dau-ap').textContent = '--/--/----';
     }
 
-    async function danhDauDaGiao(key) {
-      if (confirm('✅ Đánh dấu đơn này là ĐÃ GIAO?')) {
-        await db.ref('nguoi_dung/'+UID+'/don_hang/'+key+'/trang_thai').set('da-giao');
-      }
-    }
-
     async function xoaDonHang(key) {
       if (confirm('⚠️ Bạn chắc chắn muốn XÓA đơn này?')) {
         await db.ref('nguoi_dung/'+UID+'/don_hang/'+key).remove();
       }
     }
 
-    // ===== BẬT / TẮT POPUP THÔNG BÁO =====
     function hienThongBao() {
       document.getElementById('khung-thongbao').classList.toggle('hien');
       const bangDanhSach = document.getElementById('danh-sach-don-hang');
@@ -789,13 +1026,12 @@
 
     document.addEventListener('click', (e) => {
       const khung = document.getElementById('khung-thongbao');
-      const chuong = document.querySelector('.chuong-thongbao');
+      const chuong = document.querySelector('.fa-bell');
       if (khung && chuong && !khung.contains(e.target) && !chuong.contains(e.target)) {
         khung.classList.remove('hien');
       }
     });
 
-    // ===== TẢI VĂN BẢN (TXT FILE) =====
     async function taiVanBan() {
       const dsSnap = await db.ref('nguoi_dung/'+UID+'/don_hang').once('value');
       const ds = dsSnap.val();
@@ -826,7 +1062,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // ===== ADMIN DATA =====
     async function taiDuLieuAdmin() {
       const dsSnap = await db.ref('nguoi_dung').once('value');
       const ds = dsSnap.val() || {};
@@ -875,7 +1110,6 @@
       alert(noiDung);
     }
 
-    // ===== TOGGLE MAT KHAU =====
     document.addEventListener('click', function(e) {
       const nutConMat = e.target.closest('span[toggle]');
       if (nutConMat) {
@@ -893,7 +1127,6 @@
       }
     });
 
-    // ===== HOẠT ĐỘNG CÀI ĐẶT HIỂN THỊ =====
     function hienCaiDat() {
       document.getElementById('khung-cai-dat').classList.toggle('hien');
     }
@@ -908,8 +1141,7 @@
       const bang = document.querySelector('.danh-sach');
       const hienThi = ['Thu hẹp', 'Bình thường', 'Rộng hơn'][giaTri-1];
       document.getElementById('gia-tri-rong').textContent = hienThi;
-      const doRongToiThieu = ['100%', '100%', '100%'][giaTri-1];
-      if (bang) bang.style.width = doRongToiThieu;
+      if (bang) bang.style.width = '100%';
       localStorage.setItem('do_rong_bang', giaTri);
     }
 
