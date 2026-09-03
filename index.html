@@ -40,7 +40,6 @@
     .thanh-dn h1 { font-size: 15px; font-weight: 700; color: var(--xanh); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
     .thanh-phai { display: flex; align-items: center; gap: 12px; }
     
-    /* Biểu tượng Lịch sử & Thông báo trên Header */
     .icon-header-btn {
       position: relative;
       font-size: 18px;
@@ -210,6 +209,7 @@
           <thead>
             <tr style="background:#f0fdf4; text-align:left; color:#166534;">
               <th style="padding:8px; border:1px solid #cbd5e1;">Khách hàng</th>
+              <th style="padding:8px; border:1px solid #cbd5e1;">Số điện thoại</th>
               <th style="padding:8px; border:1px solid #cbd5e1;">Phân loại</th>
               <th style="padding:8px; border:1px solid #cbd5e1;">Số lượng</th>
               <th style="padding:8px; border:1px solid #cbd5e1;">Thành tiền</th>
@@ -320,6 +320,14 @@
           </div>
 
           <div class="form-group">
+            <label><i class="fas fa-phone icon-xanh-la"></i> Số điện thoại khách hàng</label>
+            <div class="khung-input">
+              <i class="fas fa-phone"></i>
+              <input type="tel" id="sdt-kh" placeholder="VD: 0912345678" />
+            </div>
+          </div>
+
+          <div class="form-group">
             <label><i class="fas fa-seedling icon-xanh-la"></i> Số lượng gà con <span style="color:red">*</span></label>
             <div class="khung-input">
               <i class="fas fa-seedling"></i>
@@ -346,6 +354,7 @@
               </select>
             </div>
           </div>
+
           <div class="form-group">
             <label><i class="fas fa-money-bill-wave icon-xanh-la"></i> Tiền cọc đã nhận</label>
             <div class="khung-input">
@@ -384,7 +393,7 @@
       <h3><i class="fas fa-chart-pie icon-dong"></i> Tóm tắt công nợ</h3>
       
       <div style="margin-bottom:12px; display:flex; gap:8px; align-items:center;">
-        <input type="text" id="tim-kiem-kh" placeholder="🔍 Tìm tên khách hàng..." oninput="locDanhSachDonHang()" 
+        <input type="text" id="tim-kiem-kh" placeholder="🔍 Tìm tên hoặc SĐT khách hàng..." oninput="locDanhSachDonHang()" 
                style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; background:#f8fafc;" />
       </div>
 
@@ -410,6 +419,7 @@
         <thead>
           <tr style="background:#fef2f2; text-align:left; color:#991b1b;">
             <th style="padding:8px;">Khách hàng</th>
+            <th style="padding:8px;">SĐT</th>
             <th style="padding:8px;">Chi tiết đơn nợ</th>
             <th style="padding:8px;">Số tiền nợ</th>
             <th style="padding:8px; text-align:center;">Thao tác</th>
@@ -427,6 +437,7 @@
           <thead>
             <tr>
               <th>Tên KH</th>
+              <th>SĐT</th>
               <th>Phân loại</th>
               <th>Số lượng</th>
               <th>Ngày đặt hàng</th>
@@ -638,6 +649,7 @@
     async function luuDonHang() {
       const maDon = document.getElementById('ma-don-hang').value;
       const tenKH = document.getElementById('ten-kh').value.trim();
+      const sdtKH = document.getElementById('sdt-kh').value.trim();
       const soLuong = parseInt(document.getElementById('so-luong').value) || 0;
       const giaMotCon = parseInt(document.getElementById('gia-mot-con').value) || 0;
       const phanLoai = document.getElementById('phan_loai').value;
@@ -658,7 +670,7 @@
       const trangThai = 'chua-giao';
 
       const duLieu = {
-        ten_khach: tenKH, so_luong: soLuong, gia_mot_con: giaMotCon, phan_loai: phanLoai,
+        ten_khach: tenKH, sdt: sdtKH, so_luong: soLuong, gia_mot_con: giaMotCon, phan_loai: phanLoai,
         thanh_tien: thanhTien, tien_coc: tienCoc, con_no: conNo,
         ngay_dat: ngayDat, ngay_bat_dau_ap: ngayBatDauAp,
         ngay_giao_du_kien: ngayGiao, trang_thai: trangThai
@@ -723,7 +735,10 @@
         const daGiao = trangThaiStr === 'da-giao';
         const tienCoc = Number(dh.tien_coc) || 0;
         const conNo = Number(dh.con_no) || 0;
-        const khachKhopTuKhoa = !tuKhoa || (dh.ten_khach || '').toLowerCase().includes(tuKhoa);
+        const sdt = dh.sdt || dh.dien_thoai || '';
+        const khachKhopTuKhoa = !tuKhoa || 
+          (dh.ten_khach || '').toLowerCase().includes(tuKhoa) || 
+          sdt.toLowerCase().includes(tuKhoa);
 
         // TÁCH ĐƠN ĐÃ GIAO ĐỂ HIỂN THỊ TRONG POPUP LỊCH SỬ
         if (daGiao) {
@@ -774,6 +789,7 @@
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td data-label="Tên KH"><strong>${dh.ten_khach}</strong></td>
+            <td data-label="SĐT">${sdt || '—'}</td>
             <td data-label="Phân loại">${dh.phan_loai || 'Gà xô'}</td>
             <td data-label="Số lượng">${(dh.so_luong || 0).toLocaleString('vi-VN')} con</td>
             <td data-label="Ngày đặt">${ngayDatHang}</td>
@@ -846,7 +862,8 @@
 
       document.getElementById('giao-key-don').value = key;
       document.getElementById('giao-con-no-goc').value = dh.con_no || 0;
-      document.getElementById('txt-thong-tin-don').innerHTML = `Khách hàng: <b>${dh.ten_khach}</b><br>Còn nợ đơn hàng: <b style="color:#dc2626;">${(dh.con_no || 0).toLocaleString('vi-VN')} đ</b>`;
+      const sdt = dh.sdt || dh.dien_thoai ? ` - SĐT: ${dh.sdt || dh.dien_thoai}` : '';
+      document.getElementById('txt-thong-tin-don').innerHTML = `Khách hàng: <b>${dh.ten_khach}</b>${sdt}<br>Còn nợ đơn hàng: <b style="color:#dc2626;">${(dh.con_no || 0).toLocaleString('vi-VN')} đ</b>`;
       
       document.getElementById('inp-tien-thu').value = dh.con_no || 0; 
       document.getElementById('modal-giao-hang').style.display = 'flex';
@@ -898,7 +915,7 @@
       tbodyNo.innerHTML = '';
 
       if (dsKhachHangNo.length === 0) {
-        tbodyNo.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:15px; color:#64748b;">Không có khách hàng nào còn nợ.</td></tr>';
+        tbodyNo.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; color:#64748b;">Không có khách hàng nào còn nợ.</td></tr>';
         return;
       }
 
@@ -907,6 +924,7 @@
         tr.style.borderBottom = '1px solid #fee2e2';
         tr.innerHTML = `
           <td style="padding:8px;"><b>${dh.ten_khach}</b></td>
+          <td style="padding:8px;">${dh.sdt || dh.dien_thoai || '—'}</td>
           <td style="padding:8px;">${dh.phan_loai || 'Gà xô'} (${(dh.so_luong||0).toLocaleString('vi-VN')} con)</td>
           <td style="padding:8px; color:#dc2626; font-weight:bold;">${(dh.con_no||0).toLocaleString('vi-VN')} đ</td>
           <td style="padding:8px; text-align:center;">
@@ -917,62 +935,63 @@
       });
     }
 
-// ===== RENDER LỊCH SỬ ĐÃ GIAO (CÓ NÚT THANH TOÁN) =====
-function renderDanhSachDaGiao(dsDaGiao) {
-  const tbodyDaGiao = document.getElementById('tb-danh-sach-da-giao');
-  if (!tbodyDaGiao) return;
-  tbodyDaGiao.innerHTML = '';
+    // ===== RENDER LỊCH SỬ ĐÃ GIAO (CÓ NÚT THANH TOÁN) =====
+    function renderDanhSachDaGiao(dsDaGiao) {
+      const tbodyDaGiao = document.getElementById('tb-danh-sach-da-giao');
+      if (!tbodyDaGiao) return;
+      tbodyDaGiao.innerHTML = '';
 
-  const table = tbodyDaGiao.closest('table');
-  let tfoot = table.querySelector('tfoot');
-  if (tfoot) tfoot.remove();
+      const table = tbodyDaGiao.closest('table');
+      let tfoot = table.querySelector('tfoot');
+      if (tfoot) tfoot.remove();
 
-  if (dsDaGiao.length === 0) {
-    tbodyDaGiao.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:15px; color:#64748b;">Chưa có đơn hàng nào đã giao.</td></tr>';
-    return;
-  }
+      if (dsDaGiao.length === 0) {
+        tbodyDaGiao.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:15px; color:#64748b;">Chưa có đơn hàng nào đã giao.</td></tr>';
+        return;
+      }
 
-  let tongConNo = 0;
+      let tongConNo = 0;
 
-  dsDaGiao.forEach(dh => {
-    const conNo = Number(dh.con_no) || 0;
-    tongConNo += conNo;
+      dsDaGiao.forEach(dh => {
+        const conNo = Number(dh.con_no) || 0;
+        tongConNo += conNo;
 
-    const tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid #f1f5f9';
-    tr.innerHTML = `
-      <td style="padding:8px; border:1px solid #e2e8f0;"><b>${dh.ten_khach}</b></td>
-      <td style="padding:8px; border:1px solid #e2e8f0;">${dh.phan_loai || 'Gà xô'}</td>
-      <td style="padding:8px; border:1px solid #e2e8f0;">${(dh.so_luong||0).toLocaleString('vi-VN')} con</td>
-      <td style="padding:8px; border:1px solid #e2e8f0;">${(dh.thanh_tien||0).toLocaleString('vi-VN')} đ</td>
-      <td style="padding:8px; border:1px solid #e2e8f0;">
-        ${conNo === 0 
-          ? '<span style="color:#16a34a; font-weight:bold;">🟢 Đã trả đủ</span>' 
-          : `<span style="color:#dc2626; font-weight:bold;">🔴 Còn nợ ${(conNo).toLocaleString('vi-VN')} đ</span>`}
-      </td>
-      <td style="padding:8px; border:1px solid #e2e8f0; text-align:center;">
-        ${conNo > 0 
-          ? `<button class="nut xanh-la nho" onclick="thanhToanNoLichSu('${dh.key}')">💵 Thanh toán</button>` 
-          : '<span style="color:#94a3b8; font-size:12px;">—</span>'}
-      </td>
-    `;
-    tbodyDaGiao.appendChild(tr);
-  });
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #f1f5f9';
+        tr.innerHTML = `
+          <td style="padding:8px; border:1px solid #e2e8f0;"><b>${dh.ten_khach}</b></td>
+          <td style="padding:8px; border:1px solid #e2e8f0;">${dh.sdt || dh.dien_thoai || '—'}</td>
+          <td style="padding:8px; border:1px solid #e2e8f0;">${dh.phan_loai || 'Gà xô'}</td>
+          <td style="padding:8px; border:1px solid #e2e8f0;">${(dh.so_luong||0).toLocaleString('vi-VN')} con</td>
+          <td style="padding:8px; border:1px solid #e2e8f0;">${(dh.thanh_tien||0).toLocaleString('vi-VN')} đ</td>
+          <td style="padding:8px; border:1px solid #e2e8f0;">
+            ${conNo === 0 
+              ? '<span style="color:#16a34a; font-weight:bold;">🟢 Đã trả đủ</span>' 
+              : `<span style="color:#dc2626; font-weight:bold;">🔴 Còn nợ ${(conNo).toLocaleString('vi-VN')} đ</span>`}
+          </td>
+          <td style="padding:8px; border:1px solid #e2e8f0; text-align:center;">
+            ${conNo > 0 
+              ? `<button class="nut xanh-la nho" onclick="thanhToanNoLichSu('${dh.key}')">💵 Thanh toán</button>` 
+              : '<span style="color:#94a3b8; font-size:12px;">—</span>'}
+          </td>
+        `;
+        tbodyDaGiao.appendChild(tr);
+      });
 
-  // Hàng TỔNG CỘNG ở cuối bảng
-  tfoot = document.createElement('tfoot');
-  tfoot.innerHTML = `
-    <tr style="background:#f1f5f9; font-weight:bold;">
-      <td colspan="4" style="padding:10px 8px; border:1px solid #cbd5e1; text-align:right; color:#1e293b;">
-        TỔNG DƯ NỢ CÁC ĐƠN ĐÃ GIAO:
-      </td>
-      <td colspan="2" style="padding:10px 8px; border:1px solid #cbd5e1; color:${tongConNo > 0 ? '#dc2626' : '#16a34a'}; font-size:14px;">
-        ${tongConNo > 0 ? tongConNo.toLocaleString('vi-VN') + ' đ' : '0 đ'}
-      </td>
-    </tr>
-  `;
-  tbodyDaGiao.insertAdjacentElement('afterend', tfoot);
-}
+      // Hàng TỔNG CỘNG ở cuối bảng
+      tfoot = document.createElement('tfoot');
+      tfoot.innerHTML = `
+        <tr style="background:#f1f5f9; font-weight:bold;">
+          <td colspan="5" style="padding:10px 8px; border:1px solid #cbd5e1; text-align:right; color:#1e293b;">
+            TỔNG DƯ NỢ CÁC ĐƠN ĐÃ GIAO:
+          </td>
+          <td colspan="2" style="padding:10px 8px; border:1px solid #cbd5e1; color:${tongConNo > 0 ? '#dc2626' : '#16a34a'}; font-size:14px;">
+            ${tongConNo > 0 ? tongConNo.toLocaleString('vi-VN') + ' đ' : '0 đ'}
+          </td>
+        </tr>
+      `;
+      tbodyDaGiao.insertAdjacentElement('afterend', tfoot);
+    }
 
     async function thuHetNoKhach(key) {
       if (confirm('💰 Xác nhận khách đã thanh toán TOÀN BỘ số nợ còn lại?')) {
@@ -995,6 +1014,7 @@ function renderDanhSachDaGiao(dsDaGiao) {
       document.getElementById('nut-huy-sua').classList.remove('che');
 
       document.getElementById('ten-kh').value = d.ten_khach || '';
+      document.getElementById('sdt-kh').value = d.sdt || d.dien_thoai || '';
       document.getElementById('so-luong').value = d.so_luong || '';
       document.getElementById('gia-mot-con').value = d.gia_mot_con || '';
       if (document.getElementById('phan_loai')) document.getElementById('phan_loai').value = d.phan_loai || 'Gà xô';
@@ -1049,11 +1069,12 @@ function renderDanhSachDaGiao(dsDaGiao) {
       const homNay = new Date().toLocaleString('vi-VN');
       const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
 
-      let vanBan = `======================================================================\n           DANH SÁCH ĐƠN HÀNG - QUẢN LÝ LÒ ẤP GÀ CON\n======================================================================\nThời gian lưu: ${homNay}\nEmail: ${tt.email || 'Không xác định'}\n\nSTT | Tên KH | Số lượng | Ngày đặt | Ngày ấp | Ngày giao | Thành tiền | Tiền cọc | Còn nợ | Trạng thái\n----------------------------------------------------------------------\n`;
+      let vanBan = `======================================================================\n           DANH SÁCH ĐƠN HÀNG - QUẢN LÝ LÒ ẤP GÀ CON\n======================================================================\nThời gian lưu: ${homNay}\nEmail: ${tt.email || 'Không xác định'}\n\nSTT | Tên KH | SĐT | Số lượng | Ngày đặt | Ngày ấp | Ngày giao | Thành tiền | Tiền cọc | Còn nợ | Trạng thái\n----------------------------------------------------------------------\n`;
       let stt = 1;
       Object.entries(ds).reverse().forEach(([k, dh]) => {
         const trangThai = dh.trang_thai === 'da-giao' ? 'Đã giao' : dh.con_no <= 0 ? 'Đã trả đủ' : 'Chưa trả đủ';
-        vanBan += `${String(stt).padStart(3,' ')} | ${dh.ten_khach.padEnd(14,' ')} | ${String(dh.so_luong).padStart(6,' ')} | ${fmtNgay(dh.ngay_dat)} | ${fmtNgay(dh.ngay_bat_dau_ap)} | ${fmtNgay(dh.ngay_giao_du_kien)} | ${String((dh.thanh_tien||0).toLocaleString('vi')).padStart(10,' ')} | ${String((dh.tien_coc||0).toLocaleString('vi')).padStart(8,' ')} | ${String((dh.con_no||0).toLocaleString('vi')).padStart(8,' ')} | ${trangThai}\n`;
+        const sdt = dh.sdt || dh.dien_thoai || '—';
+        vanBan += `${String(stt).padStart(3,' ')} | ${dh.ten_khach.padEnd(14,' ')} | ${sdt.padEnd(11,' ')} | ${String(dh.so_luong).padStart(6,' ')} | ${fmtNgay(dh.ngay_dat)} | ${fmtNgay(dh.ngay_bat_dau_ap)} | ${fmtNgay(dh.ngay_giao_du_kien)} | ${String((dh.thanh_tien||0).toLocaleString('vi')).padStart(10,' ')} | ${String((dh.tien_coc||0).toLocaleString('vi')).padStart(8,' ')} | ${String((dh.con_no||0).toLocaleString('vi')).padStart(8,' ')} | ${trangThai}\n`;
         stt++;
       });
 
@@ -1111,7 +1132,8 @@ function renderDanhSachDaGiao(dsDaGiao) {
       
       let stt = 1;
       Object.entries(ds).reverse().forEach(([key, dh]) => {
-        noiDung += `${stt}. ${dh.ten_khach || '—'} - ${dh.so_luong || 0} con\n   Ấp: ${fmtNgay(dh.ngay_bat_dau_ap)} | Giao: ${fmtNgay(dh.ngay_giao_du_kien)}\n   Nợ: ${(dh.con_no||0).toLocaleString('vi')} đ\n`;
+        const sdtKhach = dh.sdt || dh.dien_thoai ? ` (SĐT: ${dh.sdt || dh.dien_thoai})` : '';
+        noiDung += `${stt}. ${dh.ten_khach || '—'}${sdtKhach} - ${dh.so_luong || 0} con\n   Ấp: ${fmtNgay(dh.ngay_bat_dau_ap)} | Giao: ${fmtNgay(dh.ngay_giao_du_kien)}\n   Nợ: ${(dh.con_no||0).toLocaleString('vi')} đ\n`;
         stt++;
       });
       alert(noiDung);
@@ -1177,16 +1199,8 @@ function renderDanhSachDaGiao(dsDaGiao) {
     });
 
     window.addEventListener('load', taiCaiDatDaLuu);
-    // ===== TÍNH NGÀY BẮT ĐẦU ẤP =====
-    document.getElementById('ngay-giao-du-kien').addEventListener('change', function(){
-      const ngayGiao = this.value;
-      if (!ngayGiao) { document.getElementById('ngay-bat-dau-ap').textContent = '--/--/----'; return; }
-      const d = new Date(ngayGiao);
-      d.setDate(d.getDate() - 21);
-      document.getElementById('ngay-bat-dau-ap').textContent = d.toISOString().split('T')[0].split('-').reverse().join('/');
-    });
 
-    // 👇 DÁN HÀM THANH TOÁN VÀO ĐÂY 👇
+    // ===== HÀM THANH TOÁN ĐƠN LỊCH SỬ =====
     async function thanhToanNoLichSu(key) {
       const dh = (window.danhSachDonHangGoc || []).find(item => item.key === key);
       if (!dh) return;
@@ -1226,68 +1240,70 @@ function renderDanhSachDaGiao(dsDaGiao) {
         alert('❌ Lỗi cập nhật thanh toán: ' + err.message);
       }
     }
+
     // ===== XUẤT FILE TẤT CẢ DỮ LIỆU KHÁCH HÀNG =====
-function xuatFileThongKe() {
-  const dsAll = window.danhSachDonHangGoc || [];
-  
-  if (dsAll.length === 0) {
-    alert('❌ Chưa có dữ liệu khách hàng nào để xuất file!');
-    return;
-  }
+    function xuatFileThongKe() {
+      const dsAll = window.danhSachDonHangGoc || [];
+      
+      if (dsAll.length === 0) {
+        alert('❌ Chưa có dữ liệu khách hàng nào để xuất file!');
+        return;
+      }
 
-  // 1. Tạo tiêu đề các cột cho file Excel/CSV
-  let csvContent = "STT,Ten Khach Hang,So Dien Thoai,Loai Ga,So Luong (con),Don Gia (d),Thanh Tien (d),Da Tra (d),Con No (d),Trang Thai Don,Ngay Dat,Ngay Giao\n";
+      // 1. Tạo tiêu đề các cột cho file Excel/CSV
+      let csvContent = "STT,Ten Khach Hang,So Dien Thoai,Loai Ga,So Luong (con),Don Gia (d),Thanh Tien (d),Da Tra (d),Con No (d),Trang Thai Don,Ngay Dat,Ngay Giao\n";
 
-  // 2. Duyệt qua TẤT CẢ khách hàng (không lọc trạng thái)
-  dsAll.forEach((dh, index) => {
-    const soLuong = Number(dh.so_luong) || 0;
-    const donGia = Number(dh.don_gia) || 0;
-    const thanhTien = Number(dh.thanh_tien) || (soLuong * donGia);
-    const conNo = Number(dh.con_no) || 0;
-    const daTra = Math.max(0, thanhTien - conNo);
-    
-    // Xác định trạng thái nợ / đơn
-    let trangThai = '';
-    if (dh.da_giao) {
-      trangThai = (conNo > 0) ? "Da giao - Con no" : "Da giao - Da thanh toan";
-    } else {
-      trangThai = (conNo > 0) ? "Dang ap - Con no" : "Dang ap - Da coc/Tra đủ";
+      // 2. Duyệt qua TẤT CẢ khách hàng (không lọc trạng thái)
+      dsAll.forEach((dh, index) => {
+        const soLuong = Number(dh.so_luong) || 0;
+        const donGia = Number(dh.gia_mot_con || dh.don_gia) || 0;
+        const thanhTien = Number(dh.thanh_tien) || (soLuong * donGia);
+        const conNo = Number(dh.con_no) || 0;
+        const daTra = Math.max(0, thanhTien - conNo);
+        
+        // Xác định trạng thái nợ / đơn
+        let trangThai = '';
+        if (dh.trang_thai === 'da-giao') {
+          trangThai = (conNo > 0) ? "Da giao - Con no" : "Da giao - Da thanh toan";
+        } else {
+          trangThai = (conNo > 0) ? "Dang ap - Con no" : "Dang ap - Da coc/Tra du";
+        }
+
+        // Làm sạch tên và thông tin tránh lỗi dấu phẩy trong CSV
+        const tenKhach = `"${(dh.ten_khach || '').replace(/"/g, '""')}"`;
+        const sdt = `"${(dh.sdt || dh.dien_thoai || '').replace(/"/g, '""')}"`;
+        const loaiGa = `"${(dh.phan_loai || 'Ga xo').replace(/"/g, '""')}"`;
+        const ngayDat = dh.ngay_dat || '';
+        const ngayGiao = dh.ngay_giao_du_kien || dh.ngay_giao || '';
+
+        // Nối dòng
+        csvContent += `${index + 1},${tenKhach},${sdt},${loaiGa},${soLuong},${donGia},${thanhTien},${daTra},${conNo},${trangThai},${ngayDat},${ngayGiao}\n`;
+      });
+
+      // 3. Tạo file và kích hoạt tải về (hỗ trợ hiển thị đúng tiếng Việt / UTF-8 BOM)
+      const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      
+      // Tên file kèm ngày tải
+      const homNay = new Date().toISOString().split('T')[0];
+      a.href = url;
+      a.download = `Danh_Sach_Khach_Hang_Lo_Ap_${homNay}.csv`;
+      
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
-    // Làm sạch tên và thông tin tránh lỗi dấu phẩy trong CSV
-    const tenKhach = `"${(dh.ten_khach || '').replace(/"/g, '""')}"`;
-    const sdt = `"${(dh.dien_thoai || dh.sdt || '').replace(/"/g, '""')}"`;
-    const loaiGa = `"${(dh.phan_loai || 'Ga xo').replace(/"/g, '""')}"`;
-    const ngayDat = dh.ngay_dat || '';
-    const ngayGiao = dh.ngay_giao_du_kien || dh.ngay_giao || '';
-
-    // Nối dòng
-    csvContent += `${index + 1},${tenKhach},${sdt},${loaiGa},${soLuong},${donGia},${thanhTien},${daTra},${conNo},${trangThai},${ngayDat},${ngayGiao}\n`;
-  });
-
-  // 3. Tạo file và kích hoạt tải về (hỗ trợ hiển thị đúng tiếng Việt / UTF-8 BOM)
-  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  
-  // Tên file kèm ngày tải
-  const homNay = new Date().toISOString().split('T')[0];
-  a.href = url;
-  a.download = `Danh_Sach_Khach_Hang_Lo_Ap_${homNay}.csv`;
-  
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-// Kích hoạt tính năng cài đặt App
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('PWA đã sẵn sàng!'))
-      .catch(err => console.log('Lỗi PWA:', err));
-  });
-}
+    // Kích hoạt tính năng cài đặt App
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('PWA đã sẵn sàng!'))
+          .catch(err => console.log('Lỗi PWA:', err));
+      });
+    }
   </script>
 </body>
 </html>
