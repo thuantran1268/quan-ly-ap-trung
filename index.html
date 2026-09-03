@@ -163,6 +163,13 @@
       height: 42px; 
     }
   </style>
+<!-- Cấu hình PWA để cài lên điện thoại -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16a34a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lò Ấp Gà">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png">
 </head>
 <body>
 
@@ -1272,6 +1279,14 @@ function xuatFileThongKe() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+// Kích hoạt tính năng cài đặt App
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('PWA đã sẵn sàng!'))
+      .catch(err => console.log('Lỗi PWA:', err));
+  });
 }
   </script>
 </body>
