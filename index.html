@@ -45,12 +45,15 @@
       font-size: 18px;
       cursor: pointer;
       color: #475569;
-      padding: 6px;
+      padding: 8px;
       border-radius: 8px;
       transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
-    .icon-header-btn:hover { background: #f1f5f9; color: var(--xanh); }
-    .so-thongbao { position: absolute; top: 0px; right: -2px; background: var(--do); color: #fff; font-size: 10px; font-weight: bold; padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center; }
+    .icon-header-btn i { pointer-events: none; }
+    .icon-header-btn:hover, .icon-header-btn:active { background: #f1f5f9; color: var(--xanh); }
+    .so-thongbao { position: absolute; top: 2px; right: 0px; background: var(--do); color: #fff; font-size: 10px; font-weight: bold; padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center; pointer-events: none; }
     
     .nut { padding: 8px 14px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; transition: all .2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
     .nut:active { transform: scale(0.98); }
@@ -61,11 +64,66 @@
     .nut.tim { background: var(--tim); color: #fff; }
     .nut.nho { padding: 6px 10px; font-size: 12px; border-radius: 6px; }
 
-    /* ===== KHUNG POPUP TÙY CHỈNH & THÔNG BÁO ===== */
-    .khung-thongbao { position: fixed; top: 60px; right: 12px; width: calc(100% - 24px); max-width: 340px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.15); padding: 16px; z-index: 999; display: none; max-height: 80vh; overflow-y: auto; }
+    /* ===== KHUNG POPUP CÀI ĐẶT & THÔNG BÁO TỐI ƯU ===== */
+    .khung-thongbao { 
+      position: fixed; 
+      top: 62px; 
+      right: 12px; 
+      width: calc(100% - 24px); 
+      max-width: 360px; 
+      background: #ffffff; 
+      border-radius: 16px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,.18); 
+      padding: 16px; 
+      z-index: 9999; 
+      display: none; 
+      max-height: 80vh; 
+      overflow-y: auto; 
+      border: 1px solid var(--border-color);
+      animation: hienPopup 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes hienPopup {
+      from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
     .khung-thongbao.hien { display: block; }
-    .khung-thongbao h4 { margin-bottom: 10px; color: var(--cam); font-size: 15px; }
-    .item-thongbao { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .header-tb { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    .header-tb h4 { color: #0f172a; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin: 0; }
+
+    /* CARD THÔNG BÁO TỐI ƯU GIAO DIỆN */
+    .card-tb {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+    .card-tb.ap-trung { background: #fffbeb; border-color: #fde68a; }
+    .card-tb.giao-gap { background: #fef2f2; border-color: #fca5a5; }
+    .card-tb.giao-sap-toi { background: #f0fdf4; border-color: #bbf7d0; }
+
+    .card-tb-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .card-tb.ap-trung .card-tb-title { color: #b45309; }
+    .card-tb.giao-gap .card-tb-title { color: #b91c1c; }
+    .card-tb.giao-sap-toi .card-tb-title { color: #15803d; }
+
+    .card-tb-body { font-size: 12px; color: #334155; line-height: 1.5; }
+    .btn-zalo-nhanh {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #0068ff;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-zalo-nhanh:hover { opacity: 0.9; }
 
     /* ===== FORM ĐĂNG NHẬP / ĐĂNG KÝ ===== */
     .khung { max-width: 420px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,.05); border: 1px solid var(--border-color); }
@@ -162,13 +220,12 @@
       height: 42px; 
     }
   </style>
-<!-- Cấu hình PWA để cài lên điện thoại -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#16a34a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Lò Ấp Gà">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2632/2632839.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#16a34a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lò Ấp Gà">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2632/2632839.png">
 </head>
 <body>
 
@@ -182,12 +239,12 @@
         </div>
 
         <!-- Biểu tượng Cài Đặt -->
-        <div class="icon-header-btn" id="nut-cai-dat" onclick="hienCaiDat()" title="Cài đặt">
+        <div class="icon-header-btn" id="nut-cai-dat" onclick="hienCaiDat(event)" title="Cài đặt">
             <i class="fas fa-cog"></i>
         </div>
 
         <!-- Biểu tượng Thông Báo -->
-        <div class="icon-header-btn" onclick="hienThongBao()" title="Thông báo">
+        <div class="icon-header-btn" id="nut-thong-bao" onclick="hienThongBao(event)" title="Thông báo">
             <i class="fas fa-bell"></i>
             <span class="so-thongbao" id="so-thongbao">0</span>
         </div>
@@ -225,7 +282,10 @@
 
   <!-- POPUP CÀI ĐẶT -->
   <div class="khung-thongbao" id="khung-cai-dat">
-      <h4><i class="fas fa-sliders-h"></i> Tùy chỉnh hiển thị</h4>
+      <div class="header-tb">
+        <h4><i class="fas fa-sliders-h icon-dong"></i> Tùy chỉnh hiển thị</h4>
+        <span onclick="hienCaiDat(event)" style="cursor:pointer; color:#64748b; font-size:16px;">❌</span>
+      </div>
       <div style="padding: 4px 0;">
           <label style="display:block; margin:10px 0 4px; font-size:13px; font-weight:600;">🔤 Cỡ chữ: <span id="gia-tri-chu">14</span>px</label>
           <input type="range" id="thay-doi-chu" min="12" max="18" value="14" style="width:100%;" oninput="capNhatKichThuocChu(this.value)">
@@ -237,9 +297,12 @@
       </div>
   </div>
 
-  <!-- POPUP THÔNG BÁO -->
+  <!-- POPUP THÔNG BÁO TỐI ƯU -->
   <div class="khung-thongbao" id="khung-thongbao">
-    <h4><i class="fas fa-bell icon-cam"></i> Đơn hàng sắp giao</h4>
+    <div class="header-tb">
+      <h4><i class="fas fa-bell icon-cam"></i> Thông Báo Sắp Giao & Vào Ấp</h4>
+      <span onclick="hienThongBao(event)" style="cursor:pointer; color:#64748b; font-size:16px;">❌</span>
+    </div>
     <div id="danh-sach-thongbao"></div>
   </div>
 
@@ -740,13 +803,11 @@
           (dh.ten_khach || '').toLowerCase().includes(tuKhoa) || 
           sdt.toLowerCase().includes(tuKhoa);
 
-        // TÁCH ĐƠN ĐÃ GIAO ĐỂ HIỂN THỊ TRONG POPUP LỊCH SỬ
         if (daGiao) {
           if (khachKhopTuKhoa) dsDaGiao.push(dh);
           return;
         }
 
-        // ĐƠN CHƯA GIAO
         if (khachKhopTuKhoa) {
           tongTienCoc += tienCoc;
           
@@ -768,7 +829,15 @@
               const sl = parseInt(dh.so_luong) || 0;
               tongTrungSapAp += sl;
               let nhanNgay = soNgayDenNgayAp === 0 ? 'Hôm nay' : (soNgayDenNgayAp === 1 ? 'Ngày mai' : 'Ngày kia');
-              chiTietGiaCacDonAp.push(`• <b>${dh.ten_khach}</b> (${dh.phan_loai || 'Gà xô'}): ${sl.toLocaleString('vi-VN')} con (${nhanNgay} ${ngayDuaTrungVaoAp})`);
+              
+              chiTietGiaCacDonAp.push({
+                ten: dh.ten_khach,
+                soLuong: sl,
+                phanLoai: dh.phan_loai || 'Gà xô',
+                nhanNgay: nhanNgay,
+                ngay: ngayDuaTrungVaoAp,
+                sdt: sdt
+              });
             }
           }
 
@@ -778,11 +847,14 @@
             const soNgay = Math.ceil((dGiao - homNay) / (1000*60*60*24));
 
             if (soNgay >= 0 && soNgay <= 7) {
-              let vanBanThongBao = '';
-              if (soNgay === 0) vanBanThongBao = `🔴 <b>HÔM NAY GIAO:</b> ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
-              else if (soNgay === 1) vanBanThongBao = `📙 <b>NGÀY MAI GIAO:</b> ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
-              else vanBanThongBao = `⏰ Còn <b>${soNgay} ngày</b>: ${dh.ten_khach} (${(dh.so_luong || 0).toLocaleString('vi-VN')} con)`;
-              dsSapGiao.push(vanBanThongBao);
+              dsSapGiao.push({
+                ten: dh.ten_khach,
+                soLuong: dh.so_luong || 0,
+                soNgay: soNgay,
+                ngayGiao: ngayGiaoHang,
+                sdt: sdt,
+                phanLoai: dh.phan_loai || 'Gà xô'
+              });
             }
           }
 
@@ -812,23 +884,57 @@
       renderSookhoangNo(dsKhachHangNo);
       renderDanhSachDaGiao(dsDaGiao);
 
+      // ===== HÀM RENDER KHUNG THÔNG BÁO TỐI ƯU GIAO DIỆN =====
       const khungTB = document.getElementById('danh-sach-thongbao');
       const chuongTB = document.getElementById('so-thongbao');
+      
       if (khungTB) {
         let htmlThongBao = '';
+
+        // Block thông báo Trứng sắp vào ấp
         if (tongTrungSapAp > 0) {
+          let chitietHTML = chiTietGiaCacDonAp.map(item => `
+            <div style="margin-top:4px; padding-top:4px; border-top:1px dashed #fde68a;">
+              • <b>${item.ten}</b>: ${item.soLuong.toLocaleString('vi-VN')} con (${item.nhanNgay} ${item.ngay})
+            </div>
+          `).join('');
+
           htmlThongBao += `
-            <div class="item-thongbao" style="background:#fef3c7; border-left:4px solid #f59e0b; padding:10px; margin-bottom:10px; border-radius:8px;">
-              <div style="color:#b45309; font-weight:bold; font-size:13px; margin-bottom:4px;">
-                🐣 TỔNG TRỨNG VÀO ẤP (2 NGÀY TỚI): ${tongTrungSapAp.toLocaleString('vi-VN')} TRỨNG
+            <div class="card-tb ap-trung">
+              <div class="card-tb-title">
+                <span>🐣 TRỨNG VÀO ẤP (2 NGÀY TỚI)</span>
+                <span style="font-weight:bold; font-size:14px;">${tongTrungSapAp.toLocaleString('vi-VN')} Quả</span>
               </div>
-              <div style="font-size:12px; color:#4b5563; line-height:1.5;">${chiTietGiaCacDonAp.join('<br>')}</div>
+              <div class="card-tb-body">
+                ${chitietHTML}
+              </div>
             </div>`;
         }
+
+        // Block thông báo đơn sắp giao
         if (dsSapGiao.length > 0) {
-          htmlThongBao += dsSapGiao.map(item => `<div class="item-thongbao">${item}</div>`).join('');
+          dsSapGiao.forEach(item => {
+            let classCard = item.soNgay === 0 ? 'giao-gap' : 'giao-sap-toi';
+            let tieuDeClass = item.soNgay === 0 ? '🔴 HÔM NAY GIAO' : (item.soNgay === 1 ? '📙 NGÀY MAI GIAO' : `⏰ Còn ${item.soNgay} ngày nữa giao`);
+            let linkZalo = item.sdt ? `https://zalo.me/${item.sdt.replace(/^0/, '84')}?text=${encodeURIComponent('Lò ấp xin thông báo đơn hàng gà con ' + item.phanLoai + ' (' + item.soLuong + ' con) dự kiến giao ngày ' + item.ngayGiao)}` : '#';
+
+            htmlThongBao += `
+              <div class="card-tb ${classCard}">
+                <div class="card-tb-title">
+                  <span>${tieuDeClass}</span>
+                  <span>${item.ngayGiao}</span>
+                </div>
+                <div class="card-tb-body">
+                  Khách: <b>${item.ten}</b> (${item.soLuong.toLocaleString('vi-VN')} con - ${item.phanLoai})<br/>
+                  SĐT: ${item.sdt || 'Chưa cập nhật'}<br/>
+                  ${item.sdt ? `<a href="${linkZalo}" target="_blank" class="btn-zalo-nhanh"><i class="fa-solid fa-paper-plane"></i> Nhắn Zalo khách</a>` : ''}
+                </div>
+              </div>
+            `;
+          });
         }
-        khungTB.innerHTML = htmlThongBao || '<div class="item-thongbao">Không có thông báo mới</div>';
+
+        khungTB.innerHTML = htmlThongBao || '<div style="text-align:center; padding:20px; color:#94a3b8;"><i class="fas fa-check-circle" style="font-size:24px; margin-bottom:8px;"></i><br>Không có thông báo mới!</div>';
         if (chuongTB) chuongTB.innerText = (tongTrungSapAp > 0 ? 1 : 0) + dsSapGiao.length;
       }
 
@@ -978,7 +1084,6 @@
         tbodyDaGiao.appendChild(tr);
       });
 
-      // Hàng TỔNG CỘNG ở cuối bảng
       tfoot = document.createElement('tfoot');
       tfoot.innerHTML = `
         <tr style="background:#f1f5f9; font-weight:bold;">
@@ -1045,50 +1150,51 @@
       }
     }
 
-    function hienThongBao() {
-      document.getElementById('khung-thongbao').classList.toggle('hien');
-      const bangDanhSach = document.getElementById('danh-sach-don-hang');
-      if (bangDanhSach) bangDanhSach.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // ===== BẬT / TẮT POPUP THÔNG BÁO TỐI ƯU (DỨT ĐIỂM BỆNH LAG / BẤM NHIỀU LẦN) =====
+    function hienThongBao(e) {
+      if (e) e.stopPropagation();
+      const khung = document.getElementById('khung-thongbao');
+      const khungCaiDat = document.getElementById('khung-cai-dat');
+      
+      if (khungCaiDat) khungCaiDat.classList.remove('hien');
+      
+      if (khung) {
+        khung.classList.toggle('hien');
+      }
     }
 
+    function hienCaiDat(e) {
+      if (e) e.stopPropagation();
+      const khungCaiDat = document.getElementById('khung-cai-dat');
+      const khungTB = document.getElementById('khung-thongbao');
+      
+      if (khungTB) khungTB.classList.remove('hien');
+      
+      if (khungCaiDat) {
+        khungCaiDat.classList.toggle('hien');
+      }
+    }
+
+    // Xử lý đóng khi bấm ra ngoài hợp lý
     document.addEventListener('click', (e) => {
-      const khung = document.getElementById('khung-thongbao');
-      const chuong = document.querySelector('.fa-bell');
-      if (khung && chuong && !khung.contains(e.target) && !chuong.contains(e.target)) {
-        khung.classList.remove('hien');
+      const khungTB = document.getElementById('khung-thongbao');
+      const nutTB = document.getElementById('nut-thong-bao');
+      
+      const khungCD = document.getElementById('khung-cai-dat');
+      const nutCD = document.getElementById('nut-cai-dat');
+
+      if (khungTB && khungTB.classList.contains('hien')) {
+        if (!khungTB.contains(e.target) && !nutTB.contains(e.target)) {
+          khungTB.classList.remove('hien');
+        }
+      }
+
+      if (khungCD && khungCD.classList.contains('hien')) {
+        if (!khungCD.contains(e.target) && !nutCD.contains(e.target)) {
+          khungCD.classList.remove('hien');
+        }
       }
     });
-
-    async function taiVanBan() {
-      const dsSnap = await db.ref('nguoi_dung/'+UID+'/don_hang').once('value');
-      const ds = dsSnap.val();
-      if (!ds) { alert('❌ Chưa có đơn hàng!'); return; }
-
-      const ttSnap = await db.ref('nguoi_dung/'+UID).once('value');
-      const tt = ttSnap.val() || {};
-      const homNay = new Date().toLocaleString('vi-VN');
-      const fmtNgay = n => n ? n.split('-').reverse().join('/') : '--';
-
-      let vanBan = `======================================================================\n           DANH SÁCH ĐƠN HÀNG - QUẢN LÝ LÒ ẤP GÀ CON\n======================================================================\nThời gian lưu: ${homNay}\nEmail: ${tt.email || 'Không xác định'}\n\nSTT | Tên KH | SĐT | Số lượng | Ngày đặt | Ngày ấp | Ngày giao | Thành tiền | Tiền cọc | Còn nợ | Trạng thái\n----------------------------------------------------------------------\n`;
-      let stt = 1;
-      Object.entries(ds).reverse().forEach(([k, dh]) => {
-        const trangThai = dh.trang_thai === 'da-giao' ? 'Đã giao' : dh.con_no <= 0 ? 'Đã trả đủ' : 'Chưa trả đủ';
-        const sdt = dh.sdt || dh.dien_thoai || '—';
-        vanBan += `${String(stt).padStart(3,' ')} | ${dh.ten_khach.padEnd(14,' ')} | ${sdt.padEnd(11,' ')} | ${String(dh.so_luong).padStart(6,' ')} | ${fmtNgay(dh.ngay_dat)} | ${fmtNgay(dh.ngay_bat_dau_ap)} | ${fmtNgay(dh.ngay_giao_du_kien)} | ${String((dh.thanh_tien||0).toLocaleString('vi')).padStart(10,' ')} | ${String((dh.tien_coc||0).toLocaleString('vi')).padStart(8,' ')} | ${String((dh.con_no||0).toLocaleString('vi')).padStart(8,' ')} | ${trangThai}\n`;
-        stt++;
-      });
-
-      taoVaTaiFile(vanBan, `danh_sach_don_hang_${new Date().toISOString().slice(0,10)}.txt`);
-    }
-
-    function taoVaTaiFile(noiDung, tenFile) {
-      const blob = new Blob([noiDung], {type:'text/plain;charset=utf-8'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = tenFile;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
 
     async function taiDuLieuAdmin() {
       const dsSnap = await db.ref('nguoi_dung').once('value');
@@ -1156,10 +1262,6 @@
       }
     });
 
-    function hienCaiDat() {
-      document.getElementById('khung-cai-dat').classList.toggle('hien');
-    }
-
     function capNhatKichThuocChu(giaTri) {
       document.getElementById('gia-tri-chu').textContent = giaTri;
       document.body.style.fontSize = giaTri + 'px';
@@ -1189,14 +1291,6 @@
       localStorage.removeItem('do_rong_bang');
       taiCaiDatDaLuu();
     }
-
-    document.addEventListener('click', (e) => {
-      const khung = document.getElementById('khung-cai-dat');
-      const nut = document.getElementById('nut-cai-dat');
-      if (khung && nut && !khung.contains(e.target) && !nut.contains(e.target)) {
-        khung.classList.remove('hien');
-      }
-    });
 
     window.addEventListener('load', taiCaiDatDaLuu);
 
@@ -1250,10 +1344,8 @@
         return;
       }
 
-      // 1. Tạo tiêu đề các cột cho file Excel/CSV
       let csvContent = "STT,Ten Khach Hang,So Dien Thoai,Loai Ga,So Luong (con),Don Gia (d),Thanh Tien (d),Da Tra (d),Con No (d),Trang Thai Don,Ngay Dat,Ngay Giao\n";
 
-      // 2. Duyệt qua TẤT CẢ khách hàng (không lọc trạng thái)
       dsAll.forEach((dh, index) => {
         const soLuong = Number(dh.so_luong) || 0;
         const donGia = Number(dh.gia_mot_con || dh.don_gia) || 0;
@@ -1261,7 +1353,6 @@
         const conNo = Number(dh.con_no) || 0;
         const daTra = Math.max(0, thanhTien - conNo);
         
-        // Xác định trạng thái nợ / đơn
         let trangThai = '';
         if (dh.trang_thai === 'da-giao') {
           trangThai = (conNo > 0) ? "Da giao - Con no" : "Da giao - Da thanh toan";
@@ -1269,23 +1360,19 @@
           trangThai = (conNo > 0) ? "Dang ap - Con no" : "Dang ap - Da coc/Tra du";
         }
 
-        // Làm sạch tên và thông tin tránh lỗi dấu phẩy trong CSV
         const tenKhach = `"${(dh.ten_khach || '').replace(/"/g, '""')}"`;
         const sdt = `"${(dh.sdt || dh.dien_thoai || '').replace(/"/g, '""')}"`;
         const loaiGa = `"${(dh.phan_loai || 'Ga xo').replace(/"/g, '""')}"`;
         const ngayDat = dh.ngay_dat || '';
         const ngayGiao = dh.ngay_giao_du_kien || dh.ngay_giao || '';
 
-        // Nối dòng
         csvContent += `${index + 1},${tenKhach},${sdt},${loaiGa},${soLuong},${donGia},${thanhTien},${daTra},${conNo},${trangThai},${ngayDat},${ngayGiao}\n`;
       });
 
-      // 3. Tạo file và kích hoạt tải về (hỗ trợ hiển thị đúng tiếng Việt / UTF-8 BOM)
       const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       
-      // Tên file kèm ngày tải
       const homNay = new Date().toISOString().split('T')[0];
       a.href = url;
       a.download = `Danh_Sach_Khach_Hang_Lo_Ap_${homNay}.csv`;
@@ -1296,7 +1383,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // Kích hoạt tính năng cài đặt App
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
